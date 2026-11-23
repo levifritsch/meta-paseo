@@ -1,7 +1,12 @@
 // Headless state machine for a chat that follows its latest reply. No React, no scroll views.
 // The view feeds events in and runs the returned scroll command. See docs/behavior-spec.md.
 
-export type FollowLayout = { replyTop: number | null; contentHeight: number; viewportHeight: number };
+export type FollowLayout = {
+  replyTop: number | null;
+  replyHeight: number | null;
+  contentHeight: number;
+  viewportHeight: number;
+};
 
 /** What following aims at: the top of the latest reply, or the bottom (after the user returns there). */
 export type FollowAnchor = "reply" | "bottom";
@@ -31,7 +36,7 @@ export const initialFollow: FollowState = {
   anchor: "reply",
   offset: 0,
   expected: null,
-  layout: { replyTop: null, contentHeight: 0, viewportHeight: 0 },
+  layout: { replyTop: null, replyHeight: null, contentHeight: 0, viewportHeight: 0 },
 };
 
 const EPSILON = 1;
@@ -46,6 +51,16 @@ export function followTarget(l: FollowLayout, anchor: FollowAnchor = "reply"): n
   return anchor === "bottom" ? max : Math.min(max, Math.max(0, l.replyTop ?? max));
 }
 
+/**
+ * Is the latest reply on screen, even partly? Before it has a reply: is the bottom? The jump
+ * button shows only when this is false.
+ */
+export function latestOnScreen(state: FollowState): boolean {
+  const { replyTop, replyHeight, viewportHeight } = state.layout;
+  if (replyTop === null) return state.offset >= maxOffset(state.layout) - BOTTOM_SLACK;
+  return replyTop < state.offset + viewportHeight && replyTop + Math.max(replyHeight ?? 0, 1) > state.offset;
+}
+
 function goTo(state: FollowState, y: number): FollowResult {
   if (Math.abs(y - state.offset) <= EPSILON) return { state, scrollTo: null };
   return { state: { ...state, offset: y, expected: y }, scrollTo: y };
@@ -54,7 +69,8 @@ function goTo(state: FollowState, y: number): FollowResult {
 export function followReduce(state: FollowState, event: FollowEvent): FollowResult {
   switch (event.type) {
     case "layout": {
-      const next = { ...state, layout: { replyTop: event.replyTop, contentHeight: event.contentHeight, viewportHeight: event.viewportHeight } };
+      const { type: _t, ...layout } = event;
+      const next = { ...state, layout };
       return next.following ? goTo(next, followTarget(next.layout, next.anchor)) : { state: next, scrollTo: null };
     }
     case "scroll": {

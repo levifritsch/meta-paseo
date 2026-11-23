@@ -44,3 +44,21 @@ export function summarizeTool(detail: ToolDetail, name: string): string {
       return detail.label || name;
   }
 }
+
+export type BlockGroup = { kind: "user" | "reply" | "work" | "note"; blocks: ChatBlock[] };
+
+/**
+ * Split blocks into visual groups: each prompt, each reply, and each unbroken run of tool calls,
+ * thinking and todo lists. Notices and errors stand alone. The chat spaces groups apart.
+ */
+export function groupBlocks(blocks: ChatBlock[]): BlockGroup[] {
+  const groups: BlockGroup[] = [];
+  for (const b of blocks) {
+    const kind: BlockGroup["kind"] =
+      b.kind === "user" ? "user" : b.kind === "assistant" ? "reply" : b.kind === "notice" || b.kind === "error" ? "note" : "work";
+    const last = groups.at(-1);
+    if (kind === "work" && last?.kind === "work") last.blocks.push(b);
+    else groups.push({ kind, blocks: [b] });
+  }
+  return groups;
+}

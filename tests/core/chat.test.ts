@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  answerTexts, buildTurns, emptyAnswer, foldCode, isComplete, latestReply, summarizeTool, togglePick,
+  answerTexts, buildTurns, emptyAnswer, foldCode, groupBlocks, isComplete, latestReply, summarizeTool, togglePick,
   type ChatBlock, type ChatEntry, type Question,
 } from "../../shared/core";
 
@@ -82,5 +82,19 @@ describe("answers", () => {
   });
   it("joins picks and text per question", () => {
     expect(answerTexts([multi], [{ picked: ["A", "B"], text: " more " }])).toEqual({ "Which all?": "A, B, more" });
+  });
+});
+
+describe("groupBlocks", () => {
+  const tool = (id: string): ChatBlock => ({ kind: "tool", id, name: "Bash", status: "completed", detail: { type: "other", label: id } });
+  const think = (id: string): ChatBlock => ({ kind: "reasoning", id, text: id });
+  it("groups an unbroken run of tools and thinking, and sets prompts and replies apart", () => {
+    const g = groupBlocks([user("u"), think("t1"), tool("c1"), tool("c2"), asst("a1"), tool("c3"), asst("a2")]);
+    expect(g.map((x) => [x.kind, x.blocks.map((b) => b.id)])).toEqual([
+      ["user", ["u"]], ["work", ["t1", "c1", "c2"]], ["reply", ["a1"]], ["work", ["c3"]], ["reply", ["a2"]],
+    ]);
+  });
+  it("keeps each reply and each error on its own", () => {
+    expect(groupBlocks([asst("a1"), asst("a2"), { kind: "error", id: "e", message: "x" }]).map((x) => x.kind)).toEqual(["reply", "reply", "note"]);
   });
 });

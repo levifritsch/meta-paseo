@@ -1,7 +1,7 @@
 import { ScrollView } from "@getpaseo/plugin/client/ui";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { latestReply, type Turn } from "../../../shared/core";
+import { groupBlocks, latestReply, type Turn } from "../../../shared/core";
 import { useAgentChat } from "../../data/useAgentChat";
 import { useDraft } from "../../state/StoreContext";
 import { Btn } from "../atoms";
@@ -24,7 +24,7 @@ export function ChatView({ agentId }: { agentId: string }) {
   const reply = latestReply(chat.tailTurns);
   // No reply yet: follow the bottom (see follow-scroll.ts).
   useEffect(() => {
-    if (!reply) scroll.setReplyTop(null);
+    if (!reply) scroll.setReply(null);
   }, [reply?.id]);
 
   const showEarlier = async () => {
@@ -48,22 +48,33 @@ export function ChatView({ agentId }: { agentId: string }) {
 
   const request = chat.requests[0];
   const running = chat.status === "running";
+  // Each group is a direct child of the scroll content, so a reply's layout `y` is its place in it.
   const turnRows = (turns: Turn[]) =>
-    turns.flatMap((t) => t.blocks).map((b) => (
-      <View key={b.id} onLayout={b.id === reply?.id ? (e) => scroll.setReplyTop(e.nativeEvent.layout.y) : undefined}>
-        <ChatRow block={b} />
-      </View>
-    ));
+    groupBlocks(turns.flatMap((t) => t.blocks)).map((g) => {
+      const first = g.blocks[0]!;
+      const isLatest = g.kind === "reply" && first.id === reply?.id;
+      return (
+        <View
+          key={first.id}
+          style={{ gap: space.md }}
+          onLayout={isLatest ? (e) => scroll.setReply({ top: e.nativeEvent.layout.y, height: e.nativeEvent.layout.height }) : undefined}
+        >
+          {g.blocks.map((b) => (
+            <ChatRow key={b.id} block={b} />
+          ))}
+        </View>
+      );
+    });
 
   return (
     <View style={{ flex: 1, backgroundColor: p.card, borderRadius: radius.md, borderWidth: 1, borderColor: p.border, overflow: "hidden" }}>
       <View style={{ flex: 1 }}>
-        <ScrollView {...scroll.scrollProps} contentContainerStyle={{ padding: space.lg, gap: space.lg }}>
+        <ScrollView {...scroll.scrollProps} contentContainerStyle={{ padding: space.lg, gap: space.xxl }}>
           {chat.hasOlder && (
             <Btn label={loadingOlder ? "Loading…" : "Show earlier"} variant="ghost" disabled={loadingOlder} onPress={showEarlier} style={{ alignSelf: "center" }} />
           )}
           {earlier.incoming && (
-            <View {...earlier.measureProps} pointerEvents="none" style={[earlier.hiddenStyle, { gap: space.lg }]}>
+            <View {...earlier.measureProps} pointerEvents="none" style={[earlier.hiddenStyle, { gap: space.xxl }]}>
               {turnRows(earlier.incoming)}
             </View>
           )}
@@ -73,7 +84,7 @@ export function ChatView({ agentId }: { agentId: string }) {
           {chat.error && <Text style={{ color: p.error, fontSize: font.sm }}>{chat.error}</Text>}
           {running && <ActivityIndicator color={p.running} style={{ alignSelf: "flex-start" }} />}
         </ScrollView>
-        {!scroll.following && (
+        {scroll.showJump && (
           <View style={{ position: "absolute", right: space.lg, bottom: space.lg }}>
             <Btn label="Jump to latest" onPress={scroll.follow} />
           </View>

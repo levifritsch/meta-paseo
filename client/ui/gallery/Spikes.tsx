@@ -45,7 +45,7 @@ function FollowDemo() {
   const last = turns[turns.length - 1];
   // A new prompt has no reply yet, so the target falls back to the bottom.
   useEffect(() => {
-    if (last && last.reply.length === 0) chat.setReplyTop(null);
+    if (last && last.reply.length === 0) chat.setReply(null);
   }, [last?.id, last?.reply.length]);
   const row = { color: p.text, fontSize: font.md, paddingVertical: space.sm };
   return (
@@ -60,7 +60,7 @@ function FollowDemo() {
         <Btn label="New prompt" onPress={addPrompt} />
         <Btn label="Show earlier" variant="ghost" onPress={showEarlier} />
         <Switch label="Auto-stream" value={auto} onValueChange={setAuto} />
-        <Text style={{ color: p.muted, fontSize: font.sm }}>{chat.following ? "following" : "detached"}</Text>
+        <Text style={{ color: p.muted, fontSize: font.sm }}>{chat.showJump ? "latest off screen" : "latest on screen"}</Text>
       </View>
       <View style={{ height: 280, borderWidth: 1, borderColor: p.border, borderRadius: radius.md, overflow: "hidden" }}>
         <ScrollView {...chat.scrollProps} style={{ backgroundColor: p.card }} contentContainerStyle={{ padding: space.lg }}>
@@ -79,7 +79,7 @@ function FollowDemo() {
               <Text style={[row, { fontWeight: "700" }]}>{t.prompt}</Text>
               {t.reply.length > 0 && (
                 // A direct child of the scroll content, so its y is the reply's top in content space.
-                <View onLayout={t === last ? (e) => chat.setReplyTop(e.nativeEvent.layout.y) : undefined}>
+                <View onLayout={t === last ? (e) => chat.setReply({ top: e.nativeEvent.layout.y, height: e.nativeEvent.layout.height }) : undefined}>
                   {t.reply.map((line, i) => (
                     <Text key={i} style={row}>
                       {line}
@@ -90,7 +90,7 @@ function FollowDemo() {
             </Fragment>
           ))}
         </ScrollView>
-        {!chat.following && (
+        {chat.showJump && (
           <View style={{ position: "absolute", right: space.lg, bottom: space.lg }}>
             <Btn label="Jump to latest" onPress={chat.follow} />
           </View>

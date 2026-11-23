@@ -69,7 +69,7 @@ export function tint(color: string, alpha: number): string {
   return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
-export const space = { xs: 2, sm: 4, md: 8, lg: 12, xl: 16 } as const;
+export const space = { xs: 2, sm: 4, md: 8, lg: 12, xl: 16, xxl: 28 } as const;
 export const radius = { sm: 4, md: 8, pill: 999 } as const;
 export const font = { xs: 10, sm: 12, md: 14, lg: 16 } as const;
 export const size = { dot: 8, control: 28, badge: 18 } as const;

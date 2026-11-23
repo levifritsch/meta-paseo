@@ -4,6 +4,7 @@ import {
   followReduce,
   followTarget,
   initialFollow,
+  latestOnScreen,
   type FollowEvent,
   type FollowState,
 } from "../../client/ui/behaviors/follow-scroll";
@@ -18,20 +19,20 @@ const run = (events: FollowEvent[], from: FollowState = initialFollow) => {
   }
   return { state, cmds };
 };
-const layout = (contentHeight: number, replyTop: number | null = null, viewportHeight = 400): FollowEvent => ({
-  type: "layout", contentHeight, replyTop, viewportHeight,
+const layout = (contentHeight: number, replyTop: number | null = null, viewportHeight = 400, replyHeight = 100): FollowEvent => ({
+  type: "layout", contentHeight, replyTop, replyHeight: replyTop === null ? null : replyHeight, viewportHeight,
 });
 
 describe("follow target", () => {
   it("is the bottom before the turn has a reply", () => {
-    expect(followTarget({ replyTop: null, contentHeight: 1000, viewportHeight: 400 })).toBe(600);
+    expect(followTarget({ replyTop: null, replyHeight: null, contentHeight: 1000, viewportHeight: 400 })).toBe(600);
   });
   it("is the top of the latest reply", () => {
-    expect(followTarget({ replyTop: 300, contentHeight: 1000, viewportHeight: 400 })).toBe(300);
+    expect(followTarget({ replyTop: 300, replyHeight: 50, contentHeight: 1000, viewportHeight: 400 })).toBe(300);
   });
   it("clamps to the scroll range", () => {
-    expect(followTarget({ replyTop: 900, contentHeight: 1000, viewportHeight: 400 })).toBe(600);
-    expect(followTarget({ replyTop: null, contentHeight: 100, viewportHeight: 400 })).toBe(0);
+    expect(followTarget({ replyTop: 900, replyHeight: 50, contentHeight: 1000, viewportHeight: 400 })).toBe(600);
+    expect(followTarget({ replyTop: null, replyHeight: 50, contentHeight: 100, viewportHeight: 400 })).toBe(0);
   });
 });
 
@@ -69,6 +70,7 @@ describe("follow scroll", () => {
       fc.record({
         type: fc.constant("layout" as const),
         replyTop: fc.option(fc.nat(3000), { nil: null }),
+        replyHeight: fc.option(fc.nat(500), { nil: null }),
         contentHeight: fc.nat(3000),
         viewportHeight: fc.integer({ min: 1, max: 800 }),
       }),
@@ -126,5 +128,21 @@ describe("prepend and the reply top", () => {
   it("shifts the reply top by the height added above it", () => {
     const { state } = run([layout(1000, 700), { type: "scroll", offset: 100 }, { type: "prepend", addedHeight: 250 }]);
     expect(state.layout.replyTop).toBe(950);
+  });
+});
+
+describe("latestOnScreen", () => {
+  const at = (offset: number, ...events: FollowEvent[]) => latestOnScreen({ ...run(events).state, offset });
+  it("is true while any part of the latest reply is in view", () => {
+    expect(at(0, layout(2000, 100, 400, 100))).toBe(true); // reply 100–200, view 0–400
+    expect(at(150, layout(2000, 100, 400, 100))).toBe(true); // view 150–550 still shows its end
+  });
+  it("is false once the reply has scrolled out of view, either way", () => {
+    expect(at(300, layout(2000, 100, 400, 100))).toBe(false);
+    expect(at(0, layout(2000, 900, 400, 100))).toBe(false);
+  });
+  it("before a reply, tracks whether the bottom is in view", () => {
+    expect(at(1600, layout(2000))).toBe(true);
+    expect(at(500, layout(2000))).toBe(false);
   });
 });
