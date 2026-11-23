@@ -1,4 +1,4 @@
-import type { BoardDef } from "./types";
+import { DEFAULT_VIEW, type BoardDef } from "./types";
 
 const empty = { folded: {}, workspaceOrder: [] };
 
@@ -13,6 +13,7 @@ export const BY_WORKSPACE: BoardDef = {
   buckets: { needs: "needs", failed: "needs", done: "needs", permission: "running", running: "running" },
   sort: [{ by: "activity", dir: "desc" }],
   state: empty,
+  view: DEFAULT_VIEW,
 };
 
 /** One column per status across every workspace. */
@@ -27,6 +28,7 @@ export const BY_STATUS: BoardDef = {
   buckets: {},
   sort: [{ by: "activity", dir: "desc" }],
   state: empty,
+  view: DEFAULT_VIEW,
 };
 
 export const DEFAULT_DEF = BY_WORKSPACE;

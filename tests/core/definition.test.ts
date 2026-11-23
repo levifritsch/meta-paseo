@@ -21,3 +21,21 @@ describe("parseBoardDef", () => {
     expect(parseBoardDef({ ...BY_STATUS, columns: [{ ...col, id: "other" }] }).ok).toBe(false);
   });
 });
+
+describe("parseBoardDef: stored and view", () => {
+  it("treats nothing stored as the default, not as a bad record", () => {
+    expect(parseBoardDef(undefined)).toEqual({ def: DEFAULT_DEF, ok: true });
+    expect(parseBoardDef({})).toEqual({ def: DEFAULT_DEF, ok: true });
+  });
+  it("fills a missing view with the default", () => {
+    const { view: _view, ...noView } = BY_STATUS;
+    const r = parseBoardDef(noView);
+    expect(r.ok).toBe(true);
+    expect(r.def.view).toEqual({ columnWidth: 360, fontScale: 1 });
+  });
+  it("resets an out-of-range view value without rejecting the definition", () => {
+    const r = parseBoardDef({ ...BY_STATUS, view: { columnWidth: 400, fontScale: 9 } });
+    expect(r.ok).toBe(true);
+    expect(r.def.view).toEqual({ columnWidth: 400, fontScale: 1 });
+  });
+});

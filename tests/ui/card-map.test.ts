@@ -106,7 +106,7 @@ describe("exclusions", () => {
   it("counts go on the parent", () => {
     const child = kid({ labels: { [PARENT_AGENT_LABEL]: "a1" } });
     const board = mapBoard([agent({ backgroundWork: { count: 2, runningCount: 0 } }), child], ws);
-    expect(board.extras["a1"]).toEqual({ subAgents: 1, backgroundTasks: 2 });
+    expect(board.extras["a1"]).toMatchObject({ subAgents: 1, backgroundTasks: 2 });
     expect(board.cards[0]!.hasSubAgents).toBe(true);
   });
 });

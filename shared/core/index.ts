@@ -5,3 +5,5 @@ export * from "./engine";
 export * from "./presets";
 export * from "./definition";
 export * from "./chat";
+export * from "./colors";
+export * from "./sessions";

@@ -29,6 +29,10 @@ export type BoardData = {
   extras: Record<string, CardExtras>;
   hidden: HiddenSession[];
   workspaces: { loaded: boolean; list: Workspace[] };
+  /** Sessions loaded at least once. */
+  loaded: boolean;
+  /** Every session id the host listed, including ones with no card. Colors are kept for these. */
+  knownIds: ReadonlySet<string>;
   /** Sessions failed to load, or never loaded yet. Distinct from "no sessions". */
   error: string | null;
   now: number;
@@ -66,9 +70,12 @@ export function useBoardData(): BoardData {
   const wsList = useMemo(() => [...workspaces.items.values()], [workspaces.items]);
   const mapped = useMemo(() => mapBoard([...agents.items.values()], wsList), [agents.items, wsList]);
   const list = useMemo(() => mapWorkspaces(wsList), [wsList]);
+  const knownIds = useMemo(() => new Set(agents.items.keys()), [agents.items]);
   return {
     ...mapped,
     workspaces: { loaded: workspaces.loaded, list },
+    loaded: agents.loaded,
+    knownIds,
     error: agents.error ?? workspaces.error,
     now,
   };

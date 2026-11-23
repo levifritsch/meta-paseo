@@ -36,6 +36,11 @@ export type SortSpec = { by: SortKey; dir: "asc" | "desc" };
 /** Per-client layout state. Workspace column ids are `ws:<workspaceId>`. */
 export type BoardState = { folded: Record<string, boolean>; workspaceOrder: string[] };
 
+/** How the board looks on this client. Card text scales; the top bar and headers do not. */
+export type BoardView = { columnWidth: number; fontScale: number };
+export const VIEW_LIMITS = { columnWidth: { min: 240, max: 720 }, fontScale: { min: 0.8, max: 1.5 } } as const;
+export const DEFAULT_VIEW: BoardView = { columnWidth: 360, fontScale: 1 };
+
 export type BoardDef = {
   version: 1;
   columns: (RuleColumn | WorkspaceColumns)[];
@@ -44,6 +49,7 @@ export type BoardDef = {
   buckets: Partial<Record<CardState, string>>;
   sort: SortSpec[];
   state: BoardState;
+  view: BoardView;
 };
 
 export type Workspace = { id: string; name: string };

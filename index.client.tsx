@@ -23,7 +23,7 @@ export default function contribute(client: PluginClientContext) {
     client.addScreen({ id: SPIKES_ID, title: "Spikes", Component: Spikes }),
     client.addScreen({ id: CHATS_ID, title: "Chats", Component: withStore(store, Chats) }),
     client.addScreen({ id: BOARD_SPIKES_ID, title: "Board spikes", Component: BoardSpikes }),
-    client.addScreen({ id: DATA_CHECK_ID, title: "Board data", Component: DataCheck }),
+    client.addScreen({ id: DATA_CHECK_ID, title: "Board data", Component: withStore(store, DataCheck) }),
     client.addCommandCenterItem({
       id: "open-data-check",
       title: "Open MetaPaseo board data check",

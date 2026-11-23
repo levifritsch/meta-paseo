@@ -11,7 +11,7 @@ export type HiddenKind = "sub-agent" | "background" | "internal";
 /** A session that gets no card. Kept so step 5's queue can show its requests under the parent. */
 export type HiddenSession = { id: string; kind: HiddenKind; parentId: string | null; requests: PaseoAgent["pendingPermissions"] };
 
-export type CardExtras = { subAgents: number; backgroundTasks: number };
+export type CardExtras = { subAgents: number; backgroundTasks: number; createdAt: number };
 
 export type MappedBoard = {
   cards: Card[];
@@ -90,7 +90,7 @@ export function mapBoard(agents: readonly PaseoAgent[], workspaces: readonly Pas
       waitingSince: WAITING.has(state) ? (time(a.attentionTimestamp) ?? lastActivity) : undefined,
       hasSubAgents: subAgents + backgroundTasks > 0,
     });
-    extras[a.id] = { subAgents, backgroundTasks };
+    extras[a.id] = { subAgents, backgroundTasks, createdAt: time(a.createdAt) ?? lastActivity };
   }
   return { cards, extras, hidden };
 }
