@@ -4,3 +4,4 @@ export * from "./workspaces";
 export * from "./engine";
 export * from "./presets";
 export * from "./definition";
+export * from "./chat";

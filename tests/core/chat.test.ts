@@ -1,0 +1,86 @@
+import { describe, expect, it } from "vitest";
+import {
+  answerTexts, buildTurns, emptyAnswer, foldCode, isComplete, latestReply, summarizeTool, togglePick,
+  type ChatBlock, type ChatEntry, type Question,
+} from "../../shared/core";
+
+const user = (id: string): ChatBlock => ({ kind: "user", id, text: id });
+const asst = (id: string): ChatBlock => ({ kind: "assistant", id, text: id });
+const entry = (block: ChatBlock, turnId?: string): ChatEntry => ({ block, turnId, timestamp: 0 });
+
+describe("buildTurns", () => {
+  it("groups by turn id", () => {
+    const turns = buildTurns([entry(user("u1"), "t1"), entry(asst("a1"), "t1"), entry(user("u2"), "t2"), entry(asst("a2"), "t2")]);
+    expect(turns.map((t) => t.blocks.map((b) => b.id))).toEqual([["u1", "a1"], ["u2", "a2"]]);
+  });
+  it("lets a steering message join the running turn", () => {
+    const turns = buildTurns([entry(user("u1"), "t1"), entry(asst("a1"), "t1"), entry(user("steer"), "t1")]);
+    expect(turns).toHaveLength(1);
+  });
+  it("falls back to user messages without turn ids", () => {
+    const turns = buildTurns([entry(user("u1")), entry(asst("a1")), entry(user("u2")), entry(user("u3")), entry(asst("a2"))]);
+    expect(turns.map((t) => t.blocks.map((b) => b.id))).toEqual([["u1", "a1"], ["u2", "u3", "a2"]]);
+  });
+  it("is empty for no entries", () => {
+    expect(buildTurns([])).toEqual([]);
+  });
+});
+
+describe("latestReply", () => {
+  it("is the last assistant block of the last turn, or null before a reply", () => {
+    expect(latestReply(buildTurns([entry(user("u"), "t"), entry(asst("a1"), "t"), entry(asst("a2"), "t")]))?.id).toBe("a2");
+    expect(latestReply(buildTurns([entry(user("u"), "t")]))).toBeNull();
+  });
+});
+
+describe("summarizeTool", () => {
+  it("uses the first command line, the file, or the label", () => {
+    expect(summarizeTool({ type: "shell", command: "ls\nwc" }, "Bash")).toBe("ls");
+    expect(summarizeTool({ type: "edit", filePath: "a.ts" }, "Edit")).toBe("a.ts");
+    expect(summarizeTool({ type: "other", label: "" }, "Task")).toBe("Task");
+  });
+});
+
+describe("foldCode", () => {
+  const lines = (n: number) => Array.from({ length: n }, (_, i) => `l${i + 1}`).join("\n");
+  it("shows up to 10 lines whole", () => {
+    expect(foldCode(lines(10))).toMatchObject({ hiddenLines: 0, foldable: false });
+  });
+  it("folds longer code to its first 5 lines", () => {
+    const r = foldCode(lines(11));
+    expect(r.shown).toBe(lines(5));
+    expect(r).toMatchObject({ hiddenLines: 6, foldable: true });
+  });
+  it("shows it all once expanded, and stays foldable", () => {
+    expect(foldCode(lines(11), true)).toMatchObject({ shown: lines(11), hiddenLines: 0, foldable: true });
+  });
+  it("counts lines as written", () => {
+    expect(foldCode("x".repeat(500)).foldable).toBe(false);
+  });
+});
+
+describe("answers", () => {
+  const single: Question = { prompt: "Which?", multiSelect: false, options: [{ label: "A" }, { label: "B" }] };
+  const multi: Question = { prompt: "Which all?", multiSelect: true, options: [{ label: "A" }, { label: "B" }] };
+  it("holds one pick for single-select, and toggles it off", () => {
+    let a = togglePick(single, emptyAnswer(), "A");
+    a = togglePick(single, a, "B");
+    expect(a.picked).toEqual(["B"]);
+    expect(togglePick(single, a, "B").picked).toEqual([]);
+  });
+  it("holds many picks for multi-select", () => {
+    let a = togglePick(multi, emptyAnswer(), "A");
+    a = togglePick(multi, a, "B");
+    expect(a.picked).toEqual(["A", "B"]);
+  });
+  it("is complete only when every question has a pick or text", () => {
+    const qs = [single, multi];
+    expect(isComplete(qs, [{ picked: ["A"], text: "" }])).toBe(false);
+    expect(isComplete(qs, [{ picked: ["A"], text: "" }, { picked: [], text: "  " }])).toBe(false);
+    expect(isComplete(qs, [{ picked: ["A"], text: "" }, { picked: [], text: "other" }])).toBe(true);
+    expect(isComplete([], [])).toBe(false);
+  });
+  it("joins picks and text per question", () => {
+    expect(answerTexts([multi], [{ picked: ["A", "B"], text: " more " }])).toEqual({ "Which all?": "A, B, more" });
+  });
+});
