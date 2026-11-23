@@ -4,7 +4,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { groupBlocks, latestReply, type Turn } from "../../../shared/core";
 import { useAgentChat } from "../../data/useAgentChat";
 import { useDraft } from "../../state/StoreContext";
-import { Btn } from "../atoms";
+import { Btn, LabeledRule } from "../atoms";
 import { useFollowScroll, usePrepend } from "../behaviors";
 import { ChatRow, Composer } from "../molecules";
 import { usePalette } from "../tokens/context";
@@ -59,6 +59,7 @@ export function ChatView({ agentId }: { agentId: string }) {
           style={{ gap: space.md }}
           onLayout={isLatest ? (e) => scroll.setReply({ top: e.nativeEvent.layout.y, height: e.nativeEvent.layout.height }) : undefined}
         >
+          {isLatest && <LabeledRule label="LATEST REPLY" />}
           {g.blocks.map((b) => (
             <ChatRow key={b.id} block={b} />
           ))}

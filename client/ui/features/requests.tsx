@@ -3,7 +3,7 @@ import { Markdown, ScrollView, TextInput } from "@getpaseo/plugin/client/ui";
 import { useState, type ComponentType } from "react";
 import type { NativeSyntheticEvent, TextInputKeyPressEventData } from "react-native";
 import { Pressable, Text, View } from "react-native";
-import { emptyAnswer, isAnswered, isComplete, togglePick, type Action, type Answer, type Request, type RequestKind } from "../../../shared/core";
+import { emptyAnswer, isAnswered, isComplete, selectCustom, setCustomText, shouldAdvance, togglePick, type Action, type Answer, type Request, type RequestKind } from "../../../shared/core";
 import { Btn, Chip } from "../atoms";
 import { CodeBlock } from "../molecules";
 import { usePalette } from "../tokens/context";
@@ -78,6 +78,11 @@ function QuestionForm({ request, onAnswer }: RendererProps<"question">) {
   const set = (next: Answer) => setAnswers((all) => all.map((x, i) => (i === tab ? next : x)));
   const complete = isComplete(qs, answers);
   const submit = () => complete && onAnswer(answers);
+  const pick = (label: string) => {
+    const next = togglePick(q, a, label);
+    set(next);
+    if (shouldAdvance(q, a, next, tab === qs.length - 1)) setTab(tab + 1);
+  };
   const onKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
     const k = e.nativeEvent as TextInputKeyPressEventData & { metaKey?: boolean; ctrlKey?: boolean };
     if (k.key === "Enter" && (k.metaKey || k.ctrlKey)) submit();
@@ -93,13 +98,13 @@ function QuestionForm({ request, onAnswer }: RendererProps<"question">) {
       )}
       <Heading>{q.prompt}</Heading>
       {q.options.map((o) => {
-        const picked = a.picked.includes(o.label);
+        const picked = !a.custom && a.picked.includes(o.label);
         return (
           <Pressable
             key={o.label}
             accessibilityRole={q.multiSelect ? "checkbox" : "radio"}
             accessibilityState={{ selected: picked }}
-            onPress={() => set(togglePick(q, a, o.label))}
+            onPress={() => pick(o.label)}
             style={{ padding: space.md, borderRadius: radius.md, borderWidth: 1, borderColor: picked ? p.accent : p.border, gap: space.xs }}
           >
             <Text style={{ color: p.text, fontSize: font.md, fontWeight: "600" }}>
@@ -114,11 +119,12 @@ function QuestionForm({ request, onAnswer }: RendererProps<"question">) {
         multiline
         numberOfLines={3}
         value={a.text}
-        onChangeText={(text) => set({ ...a, text })}
+        onFocus={() => set(selectCustom(a))}
+        onChangeText={(text) => set(setCustomText(a, text))}
         onKeyPress={onKeyPress}
         placeholder="Or type your own answer"
         placeholderTextColor={p.muted}
-        style={{ minHeight: 3 * font.md * 1.4 + space.lg, color: p.text, fontSize: font.md, padding: space.md, borderWidth: 1, borderColor: p.border, borderRadius: radius.md }}
+        style={{ minHeight: 3 * font.md * 1.4 + space.lg, color: p.text, fontSize: font.md, padding: space.md, borderWidth: 1, borderColor: a.custom ? p.accent : p.border, borderRadius: radius.md, opacity: a.custom ? 1 : 0.6 }}
       />
       <Btn label="Send answers" onPress={submit} disabled={!complete} style={{ alignSelf: "flex-start" }} />
     </View>

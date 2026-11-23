@@ -50,7 +50,7 @@ describe("responses", () => {
   it("adds answers to the question's input", () => {
     const raw = req({ kind: "question", input: { questions: [] , keep: 1 } });
     const qs = [{ prompt: "Which?", multiSelect: false, options: [] }];
-    expect(questionResponse(raw, qs, [{ picked: ["A"], text: "" }])).toEqual({
+    expect(questionResponse(raw, qs, [{ picked: ["A"], text: "", custom: false }])).toEqual({
       behavior: "allow",
       updatedInput: { questions: [], keep: 1, answers: { "Which?": "A" } },
     });

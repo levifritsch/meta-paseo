@@ -72,8 +72,8 @@ export function tint(color: string, alpha: number): string {
 export const space = { xs: 2, sm: 4, md: 8, lg: 12, xl: 16, xxl: 28 } as const;
 export const radius = { sm: 4, md: 8, pill: 999 } as const;
 export const font = { xs: 10, sm: 12, md: 14, lg: 16 } as const;
-export const size = { dot: 8, control: 28, badge: 18 } as const;
-export const motion = { fast: 120, base: 200, shake: 320 } as const;
+export const size = { dot: 8, control: 28, badge: 18, code: 240 } as const;
+export const motion = { fast: 120, base: 200, shake: 320, settle: 150 } as const;
 export const FONT_SCALE = { min: 0.8, max: 1.5, step: 0.1 } as const;
 
 export type SessionColor = { id: string; hex: string; auto: boolean };

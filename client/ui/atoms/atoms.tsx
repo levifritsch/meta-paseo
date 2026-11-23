@@ -209,3 +209,16 @@ export function Segmented<V extends string>(props: {
     </View>
   );
 }
+
+/** A thin rule with a small centered label sitting on it. */
+export function LabeledRule({ label }: { label: string }) {
+  const p = usePalette();
+  const line = <View style={{ flex: 1, height: 1, backgroundColor: p.border }} />;
+  return (
+    <View accessibilityRole="header" style={{ flexDirection: "row", alignItems: "center", gap: space.md }}>
+      {line}
+      <Text style={{ color: p.muted, fontSize: font.xs, fontWeight: "600", letterSpacing: 1 }}>{label}</Text>
+      {line}
+    </View>
+  );
+}

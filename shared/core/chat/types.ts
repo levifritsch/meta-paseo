@@ -41,5 +41,8 @@ export type Request =
 
 export type RequestKind = Request["kind"];
 
-/** Per question: the options picked and the free-text answer. */
-export type Answer = { picked: string[]; text: string };
+/**
+ * Per question: the options picked, the free text, and which one counts. The two are exclusive,
+ * but the text is kept while an option is picked so it is there when the user comes back.
+ */
+export type Answer = { picked: string[]; text: string; custom: boolean };

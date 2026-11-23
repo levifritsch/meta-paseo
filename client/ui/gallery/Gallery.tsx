@@ -2,7 +2,7 @@
 import type { PluginScreenProps } from "@getpaseo/plugin/client";
 import { useState, type ReactNode } from "react";
 import { ScrollView, Text, View } from "react-native";
-import { Badge, Btn, Chip, Dot, Segmented, Stepper, Switch } from "../atoms";
+import { Badge, Btn, Chip, Dot, LabeledRule, Segmented, Stepper, Switch } from "../atoms";
 import { FONT_SCALE, SESSION_COLORS, TokensProvider, font, space, stateColor, usePalette } from "../tokens";
 import { CARD_STATES } from "../../../shared/core";
 
@@ -60,6 +60,11 @@ function Atoms() {
         <Stepper label="Scale" value={FONT_SCALE.min} min={FONT_SCALE.min} max={FONT_SCALE.max} step={FONT_SCALE.step} onChange={noop} format={pct} />
         <Stepper label="Scale" value={scale} min={FONT_SCALE.min} max={FONT_SCALE.max} step={FONT_SCALE.step} onChange={setScale} format={pct} />
         <Stepper label="Scale" value={FONT_SCALE.max} min={FONT_SCALE.min} max={FONT_SCALE.max} step={FONT_SCALE.step} onChange={noop} format={pct} />
+      </Row>
+      <Row title="LabeledRule">
+        <View style={{ width: 320 }}>
+          <LabeledRule label="LATEST REPLY" />
+        </View>
       </Row>
       <Row title="Segmented (live)">
         <Segmented

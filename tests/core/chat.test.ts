@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  answerTexts, buildTurns, emptyAnswer, foldCode, groupBlocks, isComplete, latestReply, summarizeTool, togglePick,
+  answerTexts, buildTurns, emptyAnswer, foldCode, groupBlocks, isComplete, latestReply, selectCustom, setCustomText, shouldAdvance, summarizeTool, togglePick,
   type ChatBlock, type ChatEntry, type Question,
 } from "../../shared/core";
 
@@ -73,15 +73,36 @@ describe("answers", () => {
     a = togglePick(multi, a, "B");
     expect(a.picked).toEqual(["A", "B"]);
   });
-  it("is complete only when every question has a pick or text", () => {
+  it("makes picks and the text box exclusive, and keeps the text", () => {
+    let a = setCustomText(togglePick(single, emptyAnswer(), "A"), "my own");
+    expect(a).toEqual({ picked: [], text: "my own", custom: true });
+    a = togglePick(single, a, "B");
+    expect(a).toEqual({ picked: ["B"], text: "my own", custom: false });
+    a = selectCustom(a);
+    expect(a).toEqual({ picked: [], text: "my own", custom: true });
+  });
+  it("is complete only when every question has a pick, or text in the selected box", () => {
     const qs = [single, multi];
-    expect(isComplete(qs, [{ picked: ["A"], text: "" }])).toBe(false);
-    expect(isComplete(qs, [{ picked: ["A"], text: "" }, { picked: [], text: "  " }])).toBe(false);
-    expect(isComplete(qs, [{ picked: ["A"], text: "" }, { picked: [], text: "other" }])).toBe(true);
+    const pick = togglePick(single, emptyAnswer(), "A");
+    expect(isComplete(qs, [pick])).toBe(false);
+    expect(isComplete(qs, [pick, selectCustom(emptyAnswer())])).toBe(false);
+    expect(isComplete(qs, [pick, setCustomText(emptyAnswer(), "other")])).toBe(true);
+    expect(isComplete(qs, [pick, { picked: ["A"], text: "ignored", custom: false }])).toBe(true);
     expect(isComplete([], [])).toBe(false);
   });
-  it("joins picks and text per question", () => {
-    expect(answerTexts([multi], [{ picked: ["A", "B"], text: " more " }])).toEqual({ "Which all?": "A, B, more" });
+  it("ignores kept text while an option is picked", () => {
+    expect(answerTexts([multi], [{ picked: ["A", "B"], text: "kept", custom: false }])).toEqual({ "Which all?": "A, B" });
+    expect(answerTexts([multi], [{ picked: [], text: " mine ", custom: true }])).toEqual({ "Which all?": "mine" });
+  });
+  it("advances after a new single-select pick, but not on unpick, multi-select, text, or the last question", () => {
+    const none = emptyAnswer();
+    const a = togglePick(single, none, "A");
+    expect(shouldAdvance(single, none, a, false)).toBe(true);
+    expect(shouldAdvance(single, a, togglePick(single, a, "A"), false)).toBe(false);
+    expect(shouldAdvance(single, a, togglePick(single, a, "B"), false)).toBe(true);
+    expect(shouldAdvance(multi, none, togglePick(multi, none, "A"), false)).toBe(false);
+    expect(shouldAdvance(single, none, setCustomText(none, "x"), false)).toBe(false);
+    expect(shouldAdvance(single, none, a, true)).toBe(false);
   });
 });
 

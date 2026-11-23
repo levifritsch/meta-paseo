@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, ScrollView } from "react-native";
+import { motion } from "../tokens/tokens";
 import { followReduce, initialFollow, latestOnScreen, type FollowEvent, type FollowLayout, type FollowState } from "./follow-scroll";
 
 /** Wires the follow-scroll machine to a ScrollView. Spread `scrollProps` onto it. */
@@ -8,13 +9,36 @@ export function useFollowScroll() {
   const state = useRef<FollowState>(initialFollow);
   const dims = useRef<FollowLayout>({ ...initialFollow.layout });
   const [showJump, setShowJump] = useState(false);
+  const jump = useRef<{ shown: boolean; pending: boolean | null; timer: ReturnType<typeof setTimeout> | null }>({ shown: false, pending: null, timer: null });
+  useEffect(() => () => { if (jump.current.timer) clearTimeout(jump.current.timer); }, []);
+
+  // The button changes only after the answer holds for a moment. A panel below the chat that
+  // changes height resizes the viewport, and the answer flips back and forth while that settles.
+  const settleJump = useCallback((next: boolean) => {
+    const j = jump.current;
+    if (next === j.shown) {
+      if (j.timer) clearTimeout(j.timer);
+      j.timer = null;
+      j.pending = null;
+      return;
+    }
+    if (j.pending === next) return;
+    if (j.timer) clearTimeout(j.timer);
+    j.pending = next;
+    j.timer = setTimeout(() => {
+      j.shown = next;
+      j.pending = null;
+      j.timer = null;
+      setShowJump(next);
+    }, motion.settle);
+  }, []);
 
   const dispatch = useCallback((event: FollowEvent) => {
     const result = followReduce(state.current, event);
     state.current = result.state;
-    setShowJump(!latestOnScreen(result.state));
+    settleJump(!latestOnScreen(result.state));
     if (result.scrollTo !== null) ref.current?.scrollTo({ y: result.scrollTo, animated: false });
-  }, []);
+  }, [settleJump]);
 
   const sendLayout = useCallback(() => dispatch({ type: "layout", ...dims.current }), [dispatch]);
 

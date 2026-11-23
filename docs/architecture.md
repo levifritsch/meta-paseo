@@ -70,3 +70,5 @@ Typed registries inside the plugin, not a plugin system. Only where variation al
 5. Needs You queue.
 6. New-chat card.
 7. Motion and shake polish.
+8. Later: filter the chat (a simplified chat that hides tool calls and thinking). `groupBlocks` already separates them, so it is a filter over groups.
+9. Later: design pass on the question form and other request panels.

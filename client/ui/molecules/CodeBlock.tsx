@@ -3,7 +3,7 @@ import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { foldCode } from "../../../shared/core";
 import { Switch } from "../atoms";
 import { usePalette } from "../tokens/context";
-import { font, radius, space } from "../tokens/tokens";
+import { font, radius, size, space } from "../tokens/tokens";
 
 const MONO = Platform.select({ ios: "Menlo", android: "monospace", default: "ui-monospace, Menlo, monospace" });
 
@@ -23,7 +23,10 @@ export function CodeBlock({ text, wrapByDefault = false }: { text: string; wrapB
   );
   return (
     <View style={{ backgroundColor: p.chrome, borderRadius: radius.md, padding: space.md, gap: space.md }}>
-      {wrap ? body : <ScrollView horizontal>{body}</ScrollView>}
+      {/* A long script or diff scrolls inside its box instead of growing past the chat. */}
+      <ScrollView style={{ maxHeight: size.code }} nestedScrollEnabled>
+        {wrap ? body : <ScrollView horizontal>{body}</ScrollView>}
+      </ScrollView>
       <View style={{ flexDirection: "row", alignItems: "center", gap: space.xl }}>
         {folded.foldable && (
           <Pressable accessibilityRole="button" onPress={() => setExpanded((v) => !v)}>
