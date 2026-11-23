@@ -1,0 +1,7 @@
+{
+  "id": "meta-paseo",
+  "name": "Session Board",
+  "description": "Every session on one configurable board, with a queue for what needs you.",
+  "media": [],
+  "requirements": { "paseo": ">=0.16.0" }
+}

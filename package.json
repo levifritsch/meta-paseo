@@ -1,0 +1,23 @@
+{
+  "name": "meta-paseo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": ["paseo-plugin.json", "index.client.tsx", "index.server.ts", "src/"],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@getpaseo/plugin": "^0.17.3",
+    "react": "^19.0.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "fast-check": "^3.23.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
