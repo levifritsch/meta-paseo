@@ -2,9 +2,9 @@
 import type { PluginScreenProps } from "@getpaseo/plugin/client";
 import { ScrollView } from "@getpaseo/plugin/client/ui";
 import { Fragment, useEffect, useRef, useState } from "react";
-import { Text, View, type LayoutChangeEvent } from "react-native";
+import { Text, View } from "react-native";
 import { Btn, Switch } from "../atoms";
-import { Glide, useFollowScroll } from "../behaviors";
+import { Glide, useFollowScroll, usePrepend } from "../behaviors";
 import { SESSION_COLORS, TokensProvider, font, radius, space, usePalette } from "../tokens";
 
 type Turn = { id: number; prompt: string; reply: string[] };
@@ -19,10 +19,8 @@ function FollowDemo() {
   const p = usePalette();
   const chat = useFollowScroll();
   const [turns, setTurns] = useState<Turn[]>(() => seed(10, 2));
-  const [earlier, setEarlier] = useState<Turn[]>([]);
+  const earlier = usePrepend<Turn>(chat.prepended, space.lg);
   const [auto, setAuto] = useState(false);
-  const earlierHeight = useRef(0);
-  const pendingPrepend = useRef(false);
   const nextId = useRef(12);
   const nextEarlier = useRef(9);
 
@@ -34,17 +32,8 @@ function FollowDemo() {
     chat.follow();
   };
   const showEarlier = () => {
-    pendingPrepend.current = true;
-    setEarlier((e) => [...seed(nextEarlier.current - 2, 3), ...e]);
+    earlier.request(seed(nextEarlier.current - 2, 3));
     nextEarlier.current -= 3;
-  };
-  const onEarlierLayout = (e: LayoutChangeEvent) => {
-    const h = e.nativeEvent.layout.height;
-    if (pendingPrepend.current) {
-      pendingPrepend.current = false;
-      chat.prepended(h - earlierHeight.current);
-    }
-    earlierHeight.current = h;
   };
 
   useEffect(() => {
@@ -75,11 +64,16 @@ function FollowDemo() {
       </View>
       <View style={{ height: 280, borderWidth: 1, borderColor: p.border, borderRadius: radius.md, overflow: "hidden" }}>
         <ScrollView {...chat.scrollProps} style={{ backgroundColor: p.card }} contentContainerStyle={{ padding: space.lg }}>
-          <View onLayout={onEarlierLayout}>
-            {earlier.map((t) => (
-              <Turn key={t.id} turn={t} />
-            ))}
-          </View>
+          {earlier.incoming && (
+            <View {...earlier.measureProps} pointerEvents="none" style={earlier.hiddenStyle}>
+              {earlier.incoming.map((t) => (
+                <Turn key={t.id} turn={t} />
+              ))}
+            </View>
+          )}
+          {earlier.items.map((t) => (
+            <Turn key={t.id} turn={t} />
+          ))}
           {turns.map((t) => (
             <Fragment key={t.id}>
               <Text style={[row, { fontWeight: "700" }]}>{t.prompt}</Text>
