@@ -22,3 +22,17 @@ describe("glide", () => {
     expect(shouldEnter(false, true)).toBe(false);
   });
 });
+
+import { layoutPositions } from "../../client/ui/behaviors/glide-math";
+
+describe("layoutPositions", () => {
+  it("stacks cards by height and gap", () => {
+    expect(layoutPositions([40, 100, 40], 8)).toEqual([0, 48, 156]);
+  });
+  it("has no position after a card of unknown height", () => {
+    expect(layoutPositions([40, undefined, 40], 8)).toEqual([0, 48, undefined]);
+  });
+  it("is empty for no cards", () => {
+    expect(layoutPositions([], 8)).toEqual([]);
+  });
+});

@@ -91,3 +91,14 @@ describe("follow scroll", () => {
     );
   });
 });
+
+describe("re-attach", () => {
+  it("follows again when the user scrolls back to the bottom", () => {
+    const { state } = run([layout(1000), { type: "scroll", offset: 100 }, { type: "scroll", offset: 595 }]);
+    expect(state.following).toBe(true);
+  });
+  it("stays detached anywhere above the bottom", () => {
+    const { state } = run([layout(1000), { type: "scroll", offset: 100 }, { type: "scroll", offset: 400 }]);
+    expect(state.following).toBe(false);
+  });
+});

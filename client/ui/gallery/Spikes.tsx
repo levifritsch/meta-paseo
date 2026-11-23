@@ -142,8 +142,8 @@ function GlideDemo() {
         <Btn label="Add on top" onPress={add} />
         <Btn label="Remove first" variant="danger" onPress={remove} />
       </View>
-      <View style={{ gap: space.md }}>
-        <Glide>
+      <View>
+        <Glide gap={space.md}>
           {items.map((it) => (
             <View
               key={it.id}

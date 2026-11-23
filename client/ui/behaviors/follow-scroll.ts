@@ -30,10 +30,14 @@ export const initialFollow: FollowState = {
 };
 
 const EPSILON = 1;
+/** Within this many px of the bottom counts as "at the bottom". */
+const BOTTOM_SLACK = 8;
+
+const maxOffset = (l: FollowLayout) => Math.max(0, l.contentHeight - l.viewportHeight);
 
 /** Top of the latest reply, or the bottom before the turn has one. Clamped to the scroll range. */
 export function followTarget(l: FollowLayout): number {
-  const max = Math.max(0, l.contentHeight - l.viewportHeight);
+  const max = maxOffset(l);
   return Math.min(max, Math.max(0, l.replyTop ?? max));
 }
 
@@ -51,10 +55,12 @@ export function followReduce(state: FollowState, event: FollowEvent): FollowResu
     case "scroll": {
       const echo = state.expected !== null && Math.abs(event.offset - state.expected) <= EPSILON;
       if (echo) return { state: { ...state, offset: event.offset, expected: null }, scrollTo: null };
-      // A scroll that lands on the follow target is not the user leaving it.
+      // A scroll that lands on the follow target is not the user leaving it. Scrolling back to
+      // the bottom by hand follows again.
       const atTarget = state.following && Math.abs(event.offset - followTarget(state.layout)) <= EPSILON;
+      const atBottom = event.offset >= maxOffset(state.layout) - BOTTOM_SLACK;
       return {
-        state: { ...state, offset: event.offset, expected: null, following: atTarget },
+        state: { ...state, offset: event.offset, expected: null, following: atTarget || atBottom },
         scrollTo: null,
       };
     }
