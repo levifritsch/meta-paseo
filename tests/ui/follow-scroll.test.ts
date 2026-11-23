@@ -50,12 +50,7 @@ describe("follow scroll", () => {
     expect(state.following).toBe(false);
     expect(cmds.at(-1)).toBeNull();
   });
-  it("jumps to the bottom, not the reply top, and keeps following it", () => {
-    const { state, cmds } = run([layout(2000, 500), { type: "scroll", offset: 200 }, { type: "jump" }]);
-    expect(cmds.at(-1)).toBe(1600);
-    expect(state).toMatchObject({ following: true, anchor: "bottom" });
-  });
-  it("re-follows on a new prompt", () => {
+  it("re-follows on a new prompt or the jump button", () => {
     const { state, cmds } = run([layout(1000), { type: "scroll", offset: 100 }, layout(1400), { type: "prompt" }]);
     expect(state.following).toBe(true);
     expect(cmds.at(-1)).toBe(1000);

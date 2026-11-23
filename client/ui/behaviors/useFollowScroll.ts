@@ -40,10 +40,8 @@ export function useFollowScroll() {
       dims.current.replyTop = y;
       sendLayout();
     },
-    /** A new prompt was sent. */
+    /** A new prompt was sent, or the jump button: follow the top of the latest reply. */
     follow: () => dispatch({ type: "prompt" }),
-    /** The jump button. */
-    jump: () => dispatch({ type: "jump" }),
     /** Call right after "Show earlier" grew the content above by `addedHeight`. */
     prepended: (addedHeight: number) => dispatch({ type: "prepend", addedHeight }),
   };

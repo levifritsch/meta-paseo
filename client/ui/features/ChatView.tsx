@@ -76,7 +76,7 @@ export function ChatView({ agent: agentRef }: { agent: AgentRef }) {
         </ScrollView>
         {!scroll.following && (
           <View style={{ position: "absolute", right: space.lg, bottom: space.lg }}>
-            <Btn label="Jump to latest" onPress={scroll.jump} />
+            <Btn label="Jump to latest" onPress={scroll.follow} />
           </View>
         )}
       </View>

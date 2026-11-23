@@ -19,10 +19,8 @@ export type FollowState = {
 export type FollowEvent =
   | ({ type: "layout" } & FollowLayout)
   | { type: "scroll"; offset: number }
-  /** A new prompt was sent: follow the top of the coming reply. */
+  /** A new prompt was sent, or the jump button was pressed: follow the top of the latest reply. */
   | { type: "prompt" }
-  /** The jump button: follow the bottom. */
-  | { type: "jump" }
   /** "Show earlier" added `addedHeight` above what you were looking at. */
   | { type: "prepend"; addedHeight: number };
 
@@ -75,8 +73,6 @@ export function followReduce(state: FollowState, event: FollowEvent): FollowResu
     }
     case "prompt":
       return goTo({ ...state, following: true, anchor: "reply" }, followTarget(state.layout));
-    case "jump":
-      return goTo({ ...state, following: true, anchor: "bottom" }, followTarget(state.layout, "bottom"));
     case "prepend": {
       const y = state.offset + event.addedHeight;
       // The reply moved down with everything else, and a move fires no layout event on the web.
