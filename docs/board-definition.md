@@ -8,8 +8,10 @@ User configuration for the board: columns, order, how states group, sort. Plain 
 
 | Record | Scope | Holds |
 |---|---|---|
-| board definition | device (per-client) | columns, sections, sort, view (width, font scale), fold state, queue, card definition |
+| board definition | device (per-client, client-only) | columns, sections, sort, view (width, font scale), fold state, queue, card definition |
 | board sessions | host (shared) | session colors, hand-collapsed cards |
+
+The server registers only the host-scope record; the host refuses a device-scope one (see `decisions.md`). Both records use a loose host schema, and our own `parse` does the validation. `view` limits: column width 240 to 720, font scale 0.8 to 1.5.
 
 Each record has a schema, a `version`, and a pure `migrate`. A hand-collapse key uses a built-in state group (`needs` / `permission` / `running`), never a user-defined section id, so clients with different definitions agree. Unverified: how finely `"device"` is scoped. Assume one definition per client install.
 

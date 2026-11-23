@@ -7,7 +7,7 @@ shared/core/   pure TS: cards, placement, queue, colors, events, board engine
 client/data/   Paseo adapters; the only code that knows the client API
 client/state/  one store: persisted slice and ephemeral slice
 client/ui/     tokens → atoms → behaviors → molecules → features
-server/        settings and the rename/interrupt RPC
+server/        host-scope settings and the rename/interrupt RPC (device-scope settings are client-only)
 ```
 
 Paseo only builds plugin modules under `client/`, `server/` and `shared/`. `index.client.tsx` and `index.server.ts` sit at the repo root.
