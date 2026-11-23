@@ -67,6 +67,7 @@ Typed registries inside the plugin, not a plugin system. Only where variation al
 2. Tokens and atoms.
 3. Spikes: `useFollowScroll`, `Glide`.
 4. Chat view, then answering (questions, permissions, composer). Done as a dev screen, "Open MetaPaseo chat view"; cards come with the board UI.
+4b. Board screen: real data, cards, columns, settings. Plan in `board-screen.md`. Inserted after step 4, because 5 to 7 build on it.
 5. Needs You queue.
 6. New-chat card.
 7. Motion and shake polish.
