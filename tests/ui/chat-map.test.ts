@@ -1,5 +1,5 @@
-import type { AgentPermissionRequest } from "@getpaseo/protocol/agent-types";
 import { describe, expect, it } from "vitest";
+import type { PermissionRequest as AgentPermissionRequest } from "../../client/data/paseo-types";
 import { actionResponse, mapEntry, mapRequest, questionResponse } from "../../client/data/chat-map";
 import { createBoardStore, setDraft } from "../../client/state/store";
 

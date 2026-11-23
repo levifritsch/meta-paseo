@@ -1,6 +1,6 @@
 import { usePaseo } from "@getpaseo/plugin/client";
-import type { PaseoAgent } from "@getpaseo/client";
 import { useEffect, useState } from "react";
+import type { PaseoAgent } from "./paseo-types";
 
 const POLL_MS = 3000;
 

@@ -1,5 +1,4 @@
 // Paseo timeline and permission types to core chat types, and back. Pure; no hooks.
-import type { AgentPermissionRequest, AgentPermissionResponse, AgentTimelineItem, ToolCallDetail } from "@getpaseo/protocol/agent-types";
 import { z } from "zod";
 import {
   answerTexts,
@@ -12,8 +11,9 @@ import {
   type Request,
   type ToolDetail,
 } from "../../shared/core";
+import type { PermissionRequest, PermissionResponse, TimelineItem, ToolCallDetail } from "./paseo-types";
 
-export type RawEntry = { item: AgentTimelineItem; turnId?: string; timestamp: string; seqStart: number };
+export type RawEntry = { item: TimelineItem; turnId?: string; timestamp: string; seqStart: number };
 
 function mapDetail(detail: ToolCallDetail, name: string): ToolDetail {
   switch (detail.type) {
@@ -32,7 +32,7 @@ function mapDetail(detail: ToolCallDetail, name: string): ToolDetail {
   }
 }
 
-function mapBlock(item: AgentTimelineItem, seq: number): ChatBlock | null {
+function mapBlock(item: TimelineItem, seq: number): ChatBlock | null {
   const id = (kind: string) => `${kind}:${seq}`;
   switch (item.type) {
     case "user_message":
@@ -73,14 +73,14 @@ const DEFAULT_ACTIONS: Action[] = [
   { id: "deny", label: "Deny", behavior: "deny", variant: "danger" },
 ];
 
-function mapActions(raw: AgentPermissionRequest): Action[] {
+function mapActions(raw: PermissionRequest): Action[] {
   return raw.actions?.length
     ? raw.actions.map((a) => ({ id: a.id, label: a.label, behavior: a.behavior, variant: a.variant }))
     : DEFAULT_ACTIONS;
 }
 
 /** The command, diff or file content a permission asks about, if it names one. */
-function requestCode(raw: AgentPermissionRequest): string | undefined {
+function requestCode(raw: PermissionRequest): string | undefined {
   const d = raw.detail;
   if (d?.type === "shell") return d.command;
   if (d?.type === "edit") return d.unifiedDiff ?? d.newString;
@@ -89,7 +89,7 @@ function requestCode(raw: AgentPermissionRequest): string | undefined {
   return typeof cmd === "string" ? cmd : undefined;
 }
 
-export function mapRequest(raw: AgentPermissionRequest): Request {
+export function mapRequest(raw: PermissionRequest): Request {
   if (raw.kind === "question") {
     const parsed = questionsSchema.safeParse(raw.input?.["questions"]);
     if (parsed.success && parsed.data.length > 0) {
@@ -115,7 +115,7 @@ export function mapRequest(raw: AgentPermissionRequest): Request {
 }
 
 /** Pressing one of a request's buttons. */
-export function actionResponse(raw: AgentPermissionRequest, actionId: string): AgentPermissionResponse {
+export function actionResponse(raw: PermissionRequest, actionId: string): PermissionResponse {
   const action = mapActions(raw).find((a) => a.id === actionId);
   return action?.behavior === "deny"
     ? { behavior: "deny", selectedActionId: actionId }
@@ -126,7 +126,7 @@ export function actionResponse(raw: AgentPermissionRequest, actionId: string): A
  * Answering a question: allow, with the answers added to the tool's input as `answers`, keyed by
  * question text. This is the shape Claude Code's AskUserQuestion reads. Unverified against Paseo.
  */
-export function questionResponse(raw: AgentPermissionRequest, questions: Question[], answers: Answer[]): AgentPermissionResponse {
+export function questionResponse(raw: PermissionRequest, questions: Question[], answers: Answer[]): PermissionResponse {
   return { behavior: "allow", updatedInput: { ...(raw.input ?? {}), answers: answerTexts(questions, answers) } };
 }
 

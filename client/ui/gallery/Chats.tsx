@@ -1,8 +1,8 @@
 // Dev screen: pick any real session and open its chat, to try the chat view in Paseo.
-import type { PaseoAgent } from "@getpaseo/client";
 import type { PluginScreenProps } from "@getpaseo/plugin/client";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import type { PaseoAgent } from "../../data/paseo-types";
 import { useAgentList } from "../../data/useAgentList";
 import { Dot } from "../atoms";
 import { ChatView } from "../features/ChatView";
