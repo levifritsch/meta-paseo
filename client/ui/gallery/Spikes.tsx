@@ -92,7 +92,7 @@ function FollowDemo() {
         </ScrollView>
         {!chat.following && (
           <View style={{ position: "absolute", right: space.lg, bottom: space.lg }}>
-            <Btn label="Jump to latest" onPress={chat.follow} />
+            <Btn label="Jump to latest" onPress={chat.jump} />
           </View>
         )}
       </View>

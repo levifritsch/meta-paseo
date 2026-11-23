@@ -71,7 +71,7 @@ Tested in `tests/ui/follow-scroll.test.ts` (a UI behavior, not the board engine)
 
 - **L1.** A card's chat keeps the top of the latest reply in view, or the bottom before the turn has a reply.
 - **L2.** Scrolling away stops following. The jump button then shows.
-- **L3.** A new prompt or the jump button follows again.
+- **L3.** A new prompt follows again, aimed at the top of the coming reply. The jump button follows the bottom. (`OVERVIEW.md` has the jump button go to the latest reply; changed after trying the spike.)
 - **L4.** Scrolling back to the bottom by hand follows again, and then follows the bottom (not the reply top) until the next prompt. (Ours, from trying the spike; `OVERVIEW.md` lists only L3.)
 - **L5.** "Show earlier" keeps the same row in view.
 
