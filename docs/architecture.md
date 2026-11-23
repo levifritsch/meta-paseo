@@ -57,6 +57,7 @@ Typed registries inside the plugin, not a plugin system. Only where variation al
 - **Platform.** The old code uses React Native primitives with web-only styles. `Glide` and `useFollowScroll` carry the risk. Spike them first. If one fails, simplify the behavior, not the architecture.
 - **Config explosion.** Every option multiplies the test surface. Guard with property tests, and add options on demand.
 - **Over-abstraction.** Add a slot or registry only where code already varies.
+- **Type imports in a git install.** The host resolves `import type` itself, from the checkout's `node_modules`, and a git install has none. `client/data/paseo-types.ts` works around it by deriving Paseo types from `usePaseo`. Come back to: a manifest `build` step that installs dependencies, as `better-paseo` does (`npm ci`). It needs an npm lockfile, and we have only a pnpm one.
 - **Unverified spec.** The invariants and the "Other" concept come from `OVERVIEW.md`, not from code.
 
 ## Build order
