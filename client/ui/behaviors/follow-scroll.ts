@@ -79,7 +79,10 @@ export function followReduce(state: FollowState, event: FollowEvent): FollowResu
       return goTo({ ...state, following: true, anchor: "bottom" }, followTarget(state.layout, "bottom"));
     case "prepend": {
       const y = state.offset + event.addedHeight;
-      return { state: { ...state, following: false, offset: y, expected: y }, scrollTo: y };
+      // The reply moved down with everything else, and a move fires no layout event on the web.
+      const { replyTop } = state.layout;
+      const layout = { ...state.layout, replyTop: replyTop === null ? null : replyTop + event.addedHeight };
+      return { state: { ...state, layout, following: false, offset: y, expected: y }, scrollTo: y };
     }
   }
 }

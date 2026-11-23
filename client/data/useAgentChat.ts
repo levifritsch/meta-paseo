@@ -1,5 +1,6 @@
 // The only place chat touches Paseo's client API: timeline pages, live updates, send, answers.
 import { useAgent, usePaseo } from "@getpaseo/plugin/client";
+import type { AgentRef } from "@getpaseo/plugin/client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildTurns, type Answer, type Question, type Request, type Turn } from "../../shared/core";
 import { actionResponse, mapEntry, mapRequest, questionResponse, type RawEntry } from "./chat-map";
@@ -10,10 +11,10 @@ const LIVE_REFRESH_MS = 250;
 type Cursor = { epoch: string; seq: number };
 type Page = { entries: RawEntry[]; startCursor: Cursor | null; hasOlder: boolean };
 
-export function useAgentChat(agentId: string) {
+export function useAgentChat(agentRef: AgentRef) {
   const paseo = usePaseo();
-  const handle = useMemo(() => paseo.agents.ref(agentId), [paseo, agentId]);
-  const agent = useAgent(agentId);
+  const handle = useMemo(() => paseo.agents.ref(agentRef), [paseo, agentRef]);
+  const agent = useAgent(agentRef);
   const [, bump] = useState(0);
   const [tailEntries, setTailEntries] = useState<Map<number, RawEntry>>(new Map());
   const [hasOlder, setHasOlder] = useState(false);

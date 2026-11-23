@@ -126,3 +126,10 @@ describe("tall reply", () => {
     expect(cmds.at(-1)).toBe(500);
   });
 });
+
+describe("prepend and the reply top", () => {
+  it("shifts the reply top by the height added above it", () => {
+    const { state } = run([layout(1000, 700), { type: "scroll", offset: 100 }, { type: "prepend", addedHeight: 250 }]);
+    expect(state.layout.replyTop).toBe(950);
+  });
+});
