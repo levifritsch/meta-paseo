@@ -11,3 +11,4 @@ Append only. One entry per decision.
 - **2026-11-23: Badges follow the queue filter.** Nothing outside the filter gets a badge. The default filter is permission, question and failed.
 - **2026-11-23: Clean-room rebuild, not a refactor of `session-board`.** Chosen so configuration and extension are first-class from the start. Refactor was the viable alternative.
 - **2026-11-23: Self-contained.** No dependency on any other plugin, and no shared UI kit across plugins. The kit lives in this plugin. `session-board` is read-only reference, never imported.
+- **2026-11-23: Tooling.** pnpm, vitest, fast-check, `src/` at repo root.
