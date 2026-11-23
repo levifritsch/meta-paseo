@@ -30,6 +30,7 @@ Vocabulary: **state** is `needs` (question), `permission`, `running`, `done`, `f
 
 - **F1.** A card with focus inside it keeps its column and place when its state changes. Its dot and outline update at once.
 - **F2.** It moves when focus leaves or when you send to it.
+- **F3.** A pinned card that starts waiting on a permission still expands (S2 beats F1 for size). Found by the property test.
 
 ## Columns
 
@@ -40,7 +41,7 @@ Vocabulary: **state** is `needs` (question), `permission`, `running`, `done`, `f
 
 ## Events
 
-- **E1.** A column header shakes when a card there comes to need you or finishes: a state change in the column, or a move into it.
+- **E1.** A column header shakes when a card there comes to need you or finishes: a state change in the column, or a move into it. A newly appearing card counts as a move in. (Not in `OVERVIEW.md`; our reading.)
 - **E2.** No shake on first load, or when the grouping or definition changes.
 - **E3.** A queue filter chip shakes when another item of its kind joins the queue.
 - **E4.** Cards present at load do not animate. Nothing animates under reduced motion. (UI concern: the core only emits events.)

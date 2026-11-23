@@ -1,0 +1,23 @@
+import { describe, expect, it } from "vitest";
+import { BY_STATUS, BY_WORKSPACE, DEFAULT_DEF, parseBoardDef } from "../../src/core";
+
+describe("parseBoardDef", () => {
+  it("accepts both presets", () => {
+    expect(parseBoardDef(BY_WORKSPACE).ok).toBe(true);
+    expect(parseBoardDef(BY_STATUS).ok).toBe(true);
+  });
+  it("falls back to the default and keeps the original on invalid input (invariant 8)", () => {
+    const raw = { version: 1, columns: "nope" };
+    const r = parseBoardDef(raw);
+    expect(r).toMatchObject({ ok: false, original: raw });
+    expect(r.def).toBe(DEFAULT_DEF);
+  });
+  it("falls back on a newer version", () => {
+    expect(parseBoardDef({ ...BY_STATUS, version: 2 }).ok).toBe(false);
+  });
+  it("rejects duplicate and reserved column ids", () => {
+    const col = { kind: "rule" as const, id: "x", title: "X", match: {} };
+    expect(parseBoardDef({ ...BY_STATUS, columns: [col, col] }).ok).toBe(false);
+    expect(parseBoardDef({ ...BY_STATUS, columns: [{ ...col, id: "other" }] }).ok).toBe(false);
+  });
+});
