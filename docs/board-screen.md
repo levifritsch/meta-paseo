@@ -37,7 +37,7 @@ Each stage ends with tests where the logic is pure, and a manual check in Paseo 
 - A hook returns `{ cards, workspaces: { loaded, list }, now }`. It must tell a failed load from an empty list (invariant 9).
 - Live updates: a real subscription to the agent list, not the 3-second poll of the dev screen. Workspaces need the same.
 - Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
-- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
+- Limits: the host caps a page at 200, so the first load follows `nextCursor` through every page. A snapshot after a reconnect carries only the first page; with over 200 sessions it would drop the rest until reload. Not yet handled: a session that finished with a question open (see open question 6).
 
 **4b.2 Settings and state.**
 - Two records, each with a schema, a `version` and a pure `migrate`: the board definition (per client) and board sessions (per host: colors, hand-collapsed cards). Hand-collapse keys use the card state, never a user-defined section id.
@@ -46,7 +46,7 @@ Each stage ends with tests where the logic is pure, and a manual check in Paseo 
 - Session colors in core: pick at random among the least-used automatic colors, with white and gray manual only (P1 to P3). Existing sessions are colored oldest first on first load. Randomness is injected, so tests are deterministic.
 - The store gets the persisted slice (above) and an ephemeral one: focus, hand-expanded cards, and the previous layout the engine needs. Nothing lives in module scope.
 - Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
-- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
+- Limits: the host caps a page at 200, so the first load follows `nextCursor` through every page. A snapshot after a reconnect carries only the first page; with over 200 sessions it would drop the rest until reload. Not yet handled: a session that finished with a question open (see open question 6).
 
 **4b.3 Card.** One `Card` with slots and variants, not separate components.
 - Compact: dot, title link, workspace (status view), time, model, context use.
@@ -55,7 +55,7 @@ Each stage ends with tests where the logic is pure, and a manual check in Paseo 
 - Outline in the session color. Menu: open chat, change color, expand or collapse, copy ID, archive. Sub-agent and background-task counts.
 - A running compact card shows what it is doing, live. Decide the cost first: one small timeline subscription per running card. Fall back to the state label if it is too heavy.
 - Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
-- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
+- Limits: the host caps a page at 200, so the first load follows `nextCursor` through every page. A snapshot after a reconnect carries only the first page; with over 200 sessions it would drop the rest until reload. Not yet handled: a session that finished with a question open (see open question 6).
 
 **4b.4 Board and columns.**
 - A hook runs `board()` on each snapshot, passing the previous layout from the store.
@@ -63,15 +63,15 @@ Each stage ends with tests where the logic is pure, and a manual check in Paseo 
 - View options: column width and card font scale (80% to 150%, via `FONT_SCALE`). Scale applies to card text only, not the top bar or headers. Today components read the fixed `font` tokens, so this needs a `useFont()` that returns scaled sizes, and the molecules and atoms switch to it.
 - Focus and hand-collapse actions write to the store. Clicking out of a focused card clears focus.
 - Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
-- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
+- Limits: the host caps a page at 200, so the first load follows `nextCursor` through every page. A snapshot after a reconnect carries only the first page; with over 200 sessions it would drop the rest until reload. Not yet handled: a session that finished with a question open (see open question 6).
 
 **4b.5 Open it.** A sidebar item and a command-center item open the screen, replacing the dev screens as the entry point. Keep the dev screens until 4b is accepted.
 - Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
-- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
+- Limits: the host caps a page at 200, so the first load follows `nextCursor` through every page. A snapshot after a reconnect carries only the first page; with over 200 sessions it would drop the rest until reload. Not yet handled: a session that finished with a question open (see open question 6).
 
 **4b.6 Agent commands.** Rename and interrupt through a server RPC that runs the Paseo CLI, since the client API has no call for them. Added to the card menu.
 - Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
-- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
+- Limits: the host caps a page at 200, so the first load follows `nextCursor` through every page. A snapshot after a reconnect carries only the first page; with over 200 sessions it would drop the rest until reload. Not yet handled: a session that finished with a question open (see open question 6).
 
 ## Session to card state
 

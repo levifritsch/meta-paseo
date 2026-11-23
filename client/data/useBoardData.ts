@@ -7,8 +7,22 @@ import { applyAgentUpdate, applyWorkspaceUpdate } from "./live-map";
 import type { AgentUpdate, PaseoAgent, PaseoWorkspace, WorkspaceUpdate } from "./paseo-types";
 import { useLiveCollection } from "./useLiveCollection";
 
-const PAGE = 500;
+const PAGE = 200; // the host rejects a larger page
 const CLOCK_MS = 30_000;
+
+type Page<E> = { entries: E[]; pageInfo: { hasMore: boolean; nextCursor: string | null } };
+
+/** Follows `nextCursor` until the host has no more, so the board sees every session. */
+async function withAllPages<E, R extends Page<E>>(first: R, next: (cursor: string) => Promise<Page<E>>): Promise<R> {
+  const entries = [...first.entries];
+  let info = first.pageInfo;
+  while (info.hasMore && info.nextCursor) {
+    const page = await next(info.nextCursor);
+    entries.push(...page.entries);
+    info = page.pageInfo;
+  }
+  return { ...first, entries };
+}
 
 export type BoardData = {
   cards: Card[];
@@ -24,13 +38,20 @@ export function useBoardData(): BoardData {
   const paseo = usePaseo();
   const agents = useLiveCollection<PaseoAgent, AgentUpdate>({
     // Sub-agents and background sessions come too: they feed the parent's counts and state (C1, C2).
-    open: () => paseo.agents.list({ filter: { includeBackground: true }, page: { limit: PAGE }, subscribe: {} }),
+    open: async () => {
+      const filter = { includeBackground: true };
+      const first = await paseo.agents.list({ filter, page: { limit: PAGE }, subscribe: {} });
+      return withAllPages(first, (cursor) => paseo.agents.list({ filter, page: { limit: PAGE, cursor } }));
+    },
     onUpdate: (h) => paseo.agents.subscribe(h),
     apply: applyAgentUpdate,
     deps: [paseo],
   });
   const workspaces = useLiveCollection<PaseoWorkspace, WorkspaceUpdate>({
-    open: () => paseo.workspaces.list({ page: { limit: PAGE }, subscribe: {} }),
+    open: async () => {
+      const first = await paseo.workspaces.list({ page: { limit: PAGE }, subscribe: {} });
+      return withAllPages(first, (cursor) => paseo.workspaces.list({ page: { limit: PAGE, cursor } }));
+    },
     onUpdate: (h) => paseo.workspaces.subscribe(h),
     apply: applyWorkspaceUpdate,
     deps: [paseo],
