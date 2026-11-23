@@ -78,21 +78,24 @@ export const FONT_SCALE = { min: 0.8, max: 1.5, step: 0.1 } as const;
 
 export type SessionColor = { id: string; hex: string; auto: boolean };
 
-/** Fifteen fixed session colors. White and gray are only picked by hand. */
+/**
+ * Fifteen fixed session colors, in the same order as `session-board` so a stored slot index
+ * means the same color in both. White and gray are only picked by hand.
+ */
 export const SESSION_COLORS: readonly SessionColor[] = [
-  { id: "red", hex: "#ef4444", auto: true },
-  { id: "orange", hex: "#f97316", auto: true },
-  { id: "amber", hex: "#f59e0b", auto: true },
-  { id: "yellow", hex: "#eab308", auto: true },
-  { id: "green", hex: "#22c55e", auto: true },
-  { id: "teal", hex: "#14b8a6", auto: true },
-  { id: "cyan", hex: "#06b6d4", auto: true },
-  { id: "blue", hex: "#3b82f6", auto: true },
-  { id: "indigo", hex: "#6366f1", auto: true },
-  { id: "violet", hex: "#8b5cf6", auto: true },
-  { id: "purple", hex: "#a855f7", auto: true },
-  { id: "pink", hex: "#ec4899", auto: true },
-  { id: "brown", hex: "#a16207", auto: true },
-  { id: "white", hex: "#f8fafc", auto: false },
-  { id: "gray", hex: "#9ca3af", auto: false },
+  { id: "red", hex: "#d33c35", auto: true },
+  { id: "orange", hex: "#e26936", auto: true },
+  { id: "amber", hex: "#e2a936", auto: true },
+  { id: "lime", hex: "#a7c950", auto: true },
+  { id: "green", hex: "#4ab77c", auto: true },
+  { id: "teal", hex: "#21b2bc", auto: true },
+  { id: "blue", hex: "#398ede", auto: true },
+  { id: "indigo", hex: "#4a4fc7", auto: true },
+  { id: "purple", hex: "#7b3ae2", auto: true },
+  { id: "orchid", hex: "#aa4eb3", auto: true },
+  { id: "pink", hex: "#e776d6", auto: true },
+  { id: "rose", hex: "#dd3482", auto: true },
+  { id: "white", hex: "#ffffff", auto: false },
+  { id: "brown", hex: "#814830", auto: true },
+  { id: "gray", hex: "#8b8b8b", auto: false },
 ];
