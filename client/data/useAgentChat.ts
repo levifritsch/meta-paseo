@@ -1,6 +1,5 @@
 // The only place chat touches Paseo's client API: timeline pages, live updates, send, answers.
-import { useAgent, usePaseo } from "@getpaseo/plugin/client";
-import type { AgentRef } from "@getpaseo/plugin/client";
+import { usePaseo } from "@getpaseo/plugin/client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildTurns, type Answer, type Question, type Request, type Turn } from "../../shared/core";
 import { actionResponse, mapEntry, mapRequest, questionResponse, type RawEntry } from "./chat-map";
@@ -11,10 +10,10 @@ const LIVE_REFRESH_MS = 250;
 type Cursor = { epoch: string; seq: number };
 type Page = { entries: RawEntry[]; startCursor: Cursor | null; hasOlder: boolean };
 
-export function useAgentChat(agentRef: AgentRef) {
+export function useAgentChat(agentId: string) {
   const paseo = usePaseo();
-  const handle = useMemo(() => paseo.agents.ref(agentRef), [paseo, agentRef]);
-  const agent = useAgent(agentRef);
+  // Not the entity-state hooks (useAgent): this host gives plugin screens no state source for them.
+  const handle = useMemo(() => paseo.agents.ref(agentId), [paseo, agentId]);
   const [, bump] = useState(0);
   const [tailEntries, setTailEntries] = useState<Map<number, RawEntry>>(new Map());
   const [hasOlder, setHasOlder] = useState(false);
@@ -52,6 +51,7 @@ export function useAgentChat(agentRef: AgentRef) {
       });
       setError(null);
       setReady(true);
+      bump((n) => n + 1); // a refetch refreshes the handle's snapshot: status, pending requests
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -104,7 +104,8 @@ export function useAgentChat(agentRef: AgentRef) {
   const requests: Request[] = rawRequests.map(mapRequest);
 
   return {
-    agent,
+    status: handle.status,
+    title: handle.current()?.title ?? null,
     ready,
     error,
     tailTurns,

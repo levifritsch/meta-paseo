@@ -32,7 +32,7 @@ The UI kit lives inside this plugin. Headless logic with thin views: scroll-foll
 
 ## Integration surface
 
-Contributions the plugin makes to Paseo (>=0.16.0): a screen, a sidebar item, workspace-row badges, an explorer panel (the queue), a command-center item. The server side registers settings and handles one RPC that runs rename and interrupt through the Paseo CLI, because the client API has no call for them. Everything else goes through the client API: agent and workspace lists and subscriptions, timelines, send, permission answers, archive. Only `data/` knows any of this.
+Contributions the plugin makes to Paseo (>=0.16.0): a screen, a sidebar item, workspace-row badges, an explorer panel (the queue), a command-center item. The server side registers settings and handles one RPC that runs rename and interrupt through the Paseo CLI, because the client API has no call for them. Everything else goes through the client API: agent and workspace lists and subscriptions, timelines, send, permission answers, archive. Only `data/` knows any of this. Use `usePaseo()`, not the entity-state hooks (`useAgent`, `useAgents`): Paseo 0.17.3 gave plugin screens no state source for them and they throw "Plugin state hooks must run inside a plugin host".
 
 Settings writes are debounced, merged, and checked against a revision, so a `conflict` can happen and must be handled.
 

@@ -1,4 +1,3 @@
-import type { AgentRef } from "@getpaseo/plugin/client";
 import { ScrollView } from "@getpaseo/plugin/client/ui";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
@@ -13,12 +12,12 @@ import { font, radius, space } from "../tokens/tokens";
 import { RequestPanel } from "./requests";
 
 /** A session's chat: the last turns, live, with Show earlier, the oldest request, and a composer. */
-export function ChatView({ agent: agentRef }: { agent: AgentRef }) {
+export function ChatView({ agentId }: { agentId: string }) {
   const p = usePalette();
-  const chat = useAgentChat(agentRef);
+  const chat = useAgentChat(agentId);
   const scroll = useFollowScroll();
   const earlier = usePrepend<Turn>(scroll.prepended, space.lg);
-  const [draft, setDraft] = useDraft(agentRef.id);
+  const [draft, setDraft] = useDraft(agentId);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
 
@@ -48,7 +47,7 @@ export function ChatView({ agent: agentRef }: { agent: AgentRef }) {
   };
 
   const request = chat.requests[0];
-  const running = chat.agent?.status === "running";
+  const running = chat.status === "running";
   const turnRows = (turns: Turn[]) =>
     turns.flatMap((t) => t.blocks).map((b) => (
       <View key={b.id} onLayout={b.id === reply?.id ? (e) => scroll.setReplyTop(e.nativeEvent.layout.y) : undefined}>

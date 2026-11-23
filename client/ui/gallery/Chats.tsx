@@ -1,17 +1,16 @@
 // Dev screen: pick any real session and open its chat, to try the chat view in Paseo.
-import type { AgentRef, PluginScreenProps } from "@getpaseo/plugin/client";
-import { useAgent, useAgents } from "@getpaseo/plugin/client";
+import type { PaseoAgent } from "@getpaseo/client";
+import type { PluginScreenProps } from "@getpaseo/plugin/client";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { useAgentList } from "../../data/useAgentList";
 import { Dot } from "../atoms";
 import { ChatView } from "../features/ChatView";
 import { TokensProvider, font, radius, space, stateColor, usePalette } from "../tokens";
 
-function AgentRow({ agentRef, selected, onPress }: { agentRef: AgentRef; selected: boolean; onPress: () => void }) {
+function AgentRow({ agent, selected, onPress }: { agent: PaseoAgent; selected: boolean; onPress: () => void }) {
   const p = usePalette();
-  const a = useAgent(agentRef);
-  if (!a) return null;
-  const color = a.status === "running" ? stateColor(p, "running") : a.status === "error" ? stateColor(p, "failed") : stateColor(p, "done");
+  const color = agent.status === "running" ? stateColor(p, "running") : agent.status === "error" ? stateColor(p, "failed") : stateColor(p, "done");
   return (
     <Pressable
       onPress={onPress}
@@ -19,7 +18,7 @@ function AgentRow({ agentRef, selected, onPress }: { agentRef: AgentRef; selecte
     >
       <Dot color={color} />
       <Text style={{ color: p.text, fontSize: font.sm, flexShrink: 1 }} numberOfLines={1}>
-        {a.title ?? a.id}
+        {agent.title ?? agent.id}
       </Text>
     </Pressable>
   );
@@ -27,18 +26,18 @@ function AgentRow({ agentRef, selected, onPress }: { agentRef: AgentRef; selecte
 
 function Picker() {
   const p = usePalette();
-  const agents = useAgents({ where: (a) => !a.background && !a.parentAgentId, orderBy: ["lastActivityAt", "desc"] });
-  const [picked, setPicked] = useState<AgentRef | null>(null);
+  const agents = useAgentList();
+  const [picked, setPicked] = useState<string | null>(null);
   return (
     <View style={{ flex: 1, flexDirection: "row", backgroundColor: p.bg, padding: space.lg, gap: space.lg }}>
       <ScrollView style={{ width: 240, flexGrow: 0 }} contentContainerStyle={{ gap: space.md }}>
-        {agents.map((r) => (
-          <AgentRow key={r.key} agentRef={r} selected={picked?.key === r.key} onPress={() => setPicked(r)} />
+        {agents.map((a) => (
+          <AgentRow key={a.id} agent={a} selected={picked === a.id} onPress={() => setPicked(a.id)} />
         ))}
         {agents.length === 0 && <Text style={{ color: p.muted, fontSize: font.sm }}>No sessions.</Text>}
       </ScrollView>
       <View style={{ flex: 1 }}>
-        {picked ? <ChatView key={picked.key} agent={picked} /> : <Text style={{ color: p.muted, fontSize: font.sm }}>Pick a session.</Text>}
+        {picked ? <ChatView key={picked} agentId={picked} /> : <Text style={{ color: p.muted, fontSize: font.sm }}>Pick a session.</Text>}
       </View>
     </View>
   );
