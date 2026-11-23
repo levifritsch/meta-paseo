@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BY_STATUS, BY_WORKSPACE, board } from "../../src/core";
+import { BY_STATUS, BY_WORKSPACE, board } from "../../shared/core";
 import { card, colIds, ids, snap } from "./helpers";
 
 const cards = [

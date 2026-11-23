@@ -15,3 +15,4 @@ Append only. One entry per decision.
 - **2026-11-23: Column sections are optional and set through `buckets`.** A column that declares sections groups its cards by state bucket. One that doesn't has a single unlabelled section.
 - **2026-11-23: Permission cards top the Running column through the expanded-first rule**, not a sort key. A permission card is always expanded, so it sorts above compact cards.
 - **2026-11-23: UI targets React Native primitives.** Screens receive `theme` as a prop. Tokens derive from it, plus fixed colors the theme lacks.
+- **2026-11-23: Code lives in `shared/` and `client/`, not `src/`.** Paseo's build rejects plugin modules outside `client/`, `server/` and `shared/`. This replaces the earlier `src/` layout. `core` is in `shared/` so the server can use it.

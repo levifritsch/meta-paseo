@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { CARD_STATES } from "../../src/core";
-import { canStep, stepValue } from "../../src/ui/atoms/stepper-math";
-import { FONT_SCALE, SESSION_COLORS, palette, stateColor, tint } from "../../src/ui/tokens";
+import { CARD_STATES } from "../../shared/core";
+import { canStep, stepValue } from "../../client/ui/atoms/stepper-math";
+import { FONT_SCALE, SESSION_COLORS, palette, stateColor, tint } from "../../client/ui/tokens";
 
 const theme = {
   colors: {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BY_STATUS, board } from "../../src/core";
+import { BY_STATUS, board } from "../../shared/core";
 import { card, ids, snap } from "./helpers";
 
 const col = (r: ReturnType<typeof board>, id = "done") => ids(r.layout, id);

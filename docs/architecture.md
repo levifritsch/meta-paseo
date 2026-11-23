@@ -3,13 +3,16 @@
 ## Layout
 
 ```
-core/    pure TS: cards, placement, queue, colors, events, board engine
-data/    Paseo adapters; the only code that knows the client API
-state/   one store: persisted slice and ephemeral slice
-ui/      tokens → atoms → behaviors → molecules → features
+shared/core/   pure TS: cards, placement, queue, colors, events, board engine
+client/data/   Paseo adapters; the only code that knows the client API
+client/state/  one store: persisted slice and ephemeral slice
+client/ui/     tokens → atoms → behaviors → molecules → features
+server/        settings and the rename/interrupt RPC
 ```
 
-`core/` imports nothing from the others. A layer imports only from layers before it. Files stay small enough to read whole.
+Paseo only builds plugin modules under `client/`, `server/` and `shared/`. `index.client.tsx` and `index.server.ts` sit at the repo root.
+
+`shared/core/` imports nothing from the others. A layer imports only from layers before it. Files stay small enough to read whole.
 
 ## Pipeline
 

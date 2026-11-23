@@ -1,6 +1,6 @@
 import type { PluginClientContext } from "@getpaseo/plugin/client";
-import { BoardScreen } from "./src/ui/features/BoardScreen";
-import { Gallery } from "./src/ui/gallery/Gallery";
+import { BoardScreen } from "./client/ui/features/BoardScreen";
+import { Gallery } from "./client/ui/gallery/Gallery";
 
 const SCREEN_ID = "board";
 const GALLERY_ID = "gallery";

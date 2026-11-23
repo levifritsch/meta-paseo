@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BY_STATUS, BY_WORKSPACE, DEFAULT_DEF, parseBoardDef } from "../../src/core";
+import { BY_STATUS, BY_WORKSPACE, DEFAULT_DEF, parseBoardDef } from "../../shared/core";
 
 describe("parseBoardDef", () => {
   it("accepts both presets", () => {

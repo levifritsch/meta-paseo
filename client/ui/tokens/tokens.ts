@@ -1,6 +1,6 @@
 // The one place for colors, spacing, type and motion. No magic numbers elsewhere.
 import type { PluginTheme } from "@getpaseo/plugin";
-import type { CardState } from "../../core";
+import type { CardState } from "../../../shared/core";
 
 export type Palette = {
   bg: string;

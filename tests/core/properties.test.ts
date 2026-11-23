@@ -1,6 +1,6 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { BY_STATUS, BY_WORKSPACE, CARD_STATES, board, type BoardDef, type Card, type Layout } from "../../src/core";
+import { BY_STATUS, BY_WORKSPACE, CARD_STATES, board, type BoardDef, type Card, type Layout } from "../../shared/core";
 import { snap } from "./helpers";
 
 const cardsArb = fc.uniqueArray(

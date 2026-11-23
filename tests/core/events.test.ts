@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BY_STATUS, BY_WORKSPACE, board } from "../../src/core";
+import { BY_STATUS, BY_WORKSPACE, board } from "../../shared/core";
 import { card, snap } from "./helpers";
 
 describe("shake events", () => {

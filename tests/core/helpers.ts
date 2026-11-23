@@ -1,4 +1,4 @@
-import type { BoardResult, Card, Layout, Snapshot } from "../../src/core";
+import type { BoardResult, Card, Layout, Snapshot } from "../../shared/core";
 
 export const card = (id: string, over: Partial<Card> = {}): Card => ({
   id,

@@ -7,7 +7,9 @@
     "paseo-plugin.json",
     "index.client.tsx",
     "index.server.ts",
-    "src/"
+    "client/",
+    "server/",
+    "shared/"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
