@@ -29,14 +29,15 @@ Each stage ends with tests where the logic is pure, and a manual check in Paseo 
 **4b.0 Spike: focus and column scroll.** The two platform risks.
 - Focus-within: does a card know that focus is inside it (a message box, a question form)? `View` has no `onFocus` in React Native. Try bubbling focus events on web, and find the native equivalent. The result decides how the engine gets `focus`.
 - Column scrolling: scrolling over the padding beside a card scrolls the column, not the card's chat. Check nested scroll views on web.
-- Status: in progress. Spike screen built ("Open MetaPaseo board spikes" in the command center, `client/ui/gallery/BoardSpikes.tsx`). Pure part done and tested: `createFocusTracker` (`behaviors/focus-scope.ts`). Manual check in Paseo, web: bubbling and column scroll both work. One gap: a click on the card's own padding counted as outside, because only inputs take focus. Fix under test: `tabIndex: -1` on the card container, so it takes focus itself. The input-reporting fallback has the same gap, and is untried on native.
+- Status: done (f197963). Checked in Paseo on web: a card learns of focus-within by bubbling `onFocus`/`onBlur` from a container with `tabIndex: -1`, so a click on its padding stays inside. `createFocusTracker` (`behaviors/focus-scope.ts`) smooths the blur-then-focus between two inputs. Column scroll works as wanted: the padding scrolls the column, a chat scrolls itself. The input-reporting fallback is untried on native and has the padding gap; revisit if a native client matters. The spike screen, `BoardSpikes.tsx`, stays until 4b is accepted.
 
 **4b.1 Data.** `client/data/` turns Paseo sessions into core `Card`s and a workspace list.
 - A pure mapper, tested: `PaseoAgent` to `Card`. State comes from status, attention reason and the pending request kind (see the table below).
 - Sub-agent, background and internal sessions get no card (C2, C3). Their count goes on the parent. Their requests are kept for step 5.
 - A hook returns `{ cards, workspaces: { loaded, list }, now }`. It must tell a failed load from an empty list (invariant 9).
 - Live updates: a real subscription to the agent list, not the 3-second poll of the dev screen. Workspaces need the same.
-- Status: not started.
+- Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
+- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
 
 **4b.2 Settings and state.**
 - Two records, each with a schema, a `version` and a pure `migrate`: the board definition (per client) and board sessions (per host: colors, hand-collapsed cards). Hand-collapse keys use the card state, never a user-defined section id.
@@ -44,7 +45,8 @@ Each stage ends with tests where the logic is pure, and a manual check in Paseo 
 - An invalid or newer-version record falls back to the default and keeps the original (invariant 8). `parseBoardDef` already does this.
 - Session colors in core: pick at random among the least-used automatic colors, with white and gray manual only (P1 to P3). Existing sessions are colored oldest first on first load. Randomness is injected, so tests are deterministic.
 - The store gets the persisted slice (above) and an ephemeral one: focus, hand-expanded cards, and the previous layout the engine needs. Nothing lives in module scope.
-- Status: not started.
+- Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
+- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
 
 **4b.3 Card.** One `Card` with slots and variants, not separate components.
 - Compact: dot, title link, workspace (status view), time, model, context use.
@@ -52,28 +54,32 @@ Each stage ends with tests where the logic is pure, and a manual check in Paseo 
 - Failed: the same card with an alert dot and the error at the end.
 - Outline in the session color. Menu: open chat, change color, expand or collapse, copy ID, archive. Sub-agent and background-task counts.
 - A running compact card shows what it is doing, live. Decide the cost first: one small timeline subscription per running card. Fall back to the state label if it is too heavy.
-- Status: not started.
+- Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
+- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
 
 **4b.4 Board and columns.**
 - A hook runs `board()` on each snapshot, passing the previous layout from the store.
 - The screen: a top bar, columns edge to edge with padding inside them, `Glide` around the cards, group labels, folded strips with one dot per session, a count in status-column headers, and `Other`.
 - View options: column width and card font scale (80% to 150%, via `FONT_SCALE`). Scale applies to card text only, not the top bar or headers. Today components read the fixed `font` tokens, so this needs a `useFont()` that returns scaled sizes, and the molecules and atoms switch to it.
 - Focus and hand-collapse actions write to the store. Clicking out of a focused card clears focus.
-- Status: not started.
+- Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
+- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
 
 **4b.5 Open it.** A sidebar item and a command-center item open the screen, replacing the dev screens as the entry point. Keep the dev screens until 4b is accepted.
-- Status: not started.
+- Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
+- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
 
 **4b.6 Agent commands.** Rename and interrupt through a server RPC that runs the Paseo CLI, since the client API has no call for them. Added to the card menu.
-- Status: not started.
+- Status: built, waiting on a manual check. `card-map.ts` (mapper, tested), `live-map.ts` (update reducers), `useLiveCollection.ts` and `useBoardData.ts` (live hook). Dev screen: "Open MetaPaseo board data check". Check: cards, states and workspace names match Paseo; a new, finished or archived session appears or moves without a reload; a failed load shows NOT LOADED, not zero.
+- Limits: one page of 500 sessions and 500 workspaces, no further pages. Not yet handled: a session that finished with a question open (see open question 6).
 
 ## Session to card state
 
-Proposed. Needs checking against real snapshots in 4b.1.
+Implemented in `card-map.ts`. Still needs checking against real snapshots.
 
 | Card state | When |
 |---|---|
-| `permission` | A pending request of kind `tool`, `plan` or `mode`. |
+| `permission` | A pending request of kind `tool`, `plan`, `mode` or `other`. Outranks `needs`. |
 | `needs` | A pending request of kind `question`, or finished with a question open. |
 | `failed` | Status `error`, or attention reason `error`. |
 | `running` | Status `running`, or the turn is over but sub-agents or background tasks still work (C1). |
@@ -96,8 +102,9 @@ Proposed. Needs checking against real snapshots in 4b.1.
 
 ## Open questions
 
-1. How do we tell a sub-agent, a background session and an internal one apart in a `PaseoAgent`? The plugin snapshot has `parentAgentId` and `background`, and the raw snapshot has `internal`. Verify in 4b.1.
-2. Is there a live subscription for the agent list and for workspaces that a plugin screen may use? The entity-state hooks are not available here (see `architecture.md`).
+1. ~~How do we tell a sub-agent, a background session and an internal one apart?~~ Answered in 4b.1: a sub-agent has the label `paseo.parent-agent-id`, a background session has `background`, an internal one `internal`. The list call needs `filter.includeBackground`; internal sessions are left out by default.
+2. ~~Is there a live subscription for the agent list and for workspaces?~~ Yes: `paseo.agents.list({ subscribe: {} })` returns a subscription (fresh snapshot after a reconnect), and `paseo.agents.subscribe` and `paseo.workspaces.subscribe` deliver upserts and removals.
 3. How finely is `device` settings scope kept? Assume one definition per client install. (Also in `board-definition.md`.)
 4. Does the engine's collapse key, the card state, need the coarser needs, permission, running groups from `board-definition.md`? We chose card state in step 1.
 5. Is the live activity line on compact cards worth its cost in 4b, or does it wait?
+6. How does a session that finished with a question open show in the snapshot? It has no pending request, so the mapper calls it `done`. Check against a real session, and decide whether it needs the timeline.

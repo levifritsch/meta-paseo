@@ -4,6 +4,7 @@ import { createBoardStore } from "./client/state/store";
 import { withStore } from "./client/state/StoreContext";
 import { BoardSpikes } from "./client/ui/gallery/BoardSpikes";
 import { Chats } from "./client/ui/gallery/Chats";
+import { DataCheck } from "./client/ui/gallery/DataCheck";
 import { Gallery } from "./client/ui/gallery/Gallery";
 import { Spikes } from "./client/ui/gallery/Spikes";
 
@@ -12,6 +13,7 @@ const GALLERY_ID = "gallery";
 const SPIKES_ID = "spikes";
 const CHATS_ID = "chats";
 const BOARD_SPIKES_ID = "board-spikes";
+const DATA_CHECK_ID = "data-check";
 
 export default function contribute(client: PluginClientContext) {
   const store = createBoardStore(); // one per install; screens read it through a provider
@@ -21,6 +23,15 @@ export default function contribute(client: PluginClientContext) {
     client.addScreen({ id: SPIKES_ID, title: "Spikes", Component: Spikes }),
     client.addScreen({ id: CHATS_ID, title: "Chats", Component: withStore(store, Chats) }),
     client.addScreen({ id: BOARD_SPIKES_ID, title: "Board spikes", Component: BoardSpikes }),
+    client.addScreen({ id: DATA_CHECK_ID, title: "Board data", Component: DataCheck }),
+    client.addCommandCenterItem({
+      id: "open-data-check",
+      title: "Open MetaPaseo board data check",
+      icon: "Palette",
+      keywords: ["data", "sessions", "cards", "board"],
+      context: "global",
+      onSelect: (context) => context.openScreen({ screenId: DATA_CHECK_ID }),
+    }),
     client.addCommandCenterItem({
       id: "open-board-spikes",
       title: "Open MetaPaseo board spikes (focus, column scroll)",

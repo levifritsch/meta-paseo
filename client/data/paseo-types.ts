@@ -11,3 +11,6 @@ export type TimelineItem = TimelinePage["entries"][number]["item"];
 export type ToolCallDetail = Extract<TimelineItem, { type: "tool_call" }>["detail"];
 export type PermissionRequest = NonNullable<AgentHandle["pendingPermissions"]>[number];
 export type PermissionResponse = Parameters<AgentHandle["respondToPermission"]>[0]["response"];
+export type PaseoWorkspace = Awaited<ReturnType<Paseo["workspaces"]["list"]>>["entries"][number];
+export type AgentUpdate = Parameters<Parameters<Paseo["agents"]["subscribe"]>[0]>[0];
+export type WorkspaceUpdate = Parameters<Parameters<Paseo["workspaces"]["subscribe"]>[0]>[0];
