@@ -29,7 +29,7 @@ Each stage ends with tests where the logic is pure, and a manual check in Paseo 
 **4b.0 Spike: focus and column scroll.** The two platform risks.
 - Focus-within: does a card know that focus is inside it (a message box, a question form)? `View` has no `onFocus` in React Native. Try bubbling focus events on web, and find the native equivalent. The result decides how the engine gets `focus`.
 - Column scrolling: scrolling over the padding beside a card scrolls the column, not the card's chat. Check nested scroll views on web.
-- Status: not started.
+- Status: in progress. Spike screen built ("Open MetaPaseo board spikes" in the command center, `client/ui/gallery/BoardSpikes.tsx`). Pure part done and tested: `createFocusTracker` (`behaviors/focus-scope.ts`). Manual check in Paseo, web: bubbling and column scroll both work. One gap: a click on the card's own padding counted as outside, because only inputs take focus. Fix under test: `tabIndex: -1` on the card container, so it takes focus itself. The input-reporting fallback has the same gap, and is untried on native.
 
 **4b.1 Data.** `client/data/` turns Paseo sessions into core `Card`s and a workspace list.
 - A pure mapper, tested: `PaseoAgent` to `Card`. State comes from status, attention reason and the pending request kind (see the table below).
