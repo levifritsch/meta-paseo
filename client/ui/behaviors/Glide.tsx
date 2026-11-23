@@ -4,7 +4,7 @@ import { motion } from "../tokens/tokens";
 import { glideOffset, layoutPositions, shouldEnter } from "./glide-math";
 import { useReducedMotion } from "./useReducedMotion";
 
-type Motion = { slide: Animated.Value; fade: Animated.Value; shown: number };
+type Motion = { slide: Animated.Value; fade: Animated.Value; shown: number; joined: boolean };
 
 /**
  * A column of keyed children. When one moves, it slides from where it was. One that joins after
@@ -26,7 +26,7 @@ export function Glide({ children, gap = 0 }: { children: ReactNode; gap?: number
   const motionFor = (key: string): Motion => {
     let m = motions.current.get(key);
     if (!m) {
-      m = { slide: new Animated.Value(0), fade: new Animated.Value(shouldEnter(!loaded.current, reduced) ? 0 : 1), shown: 0 };
+      m = { slide: new Animated.Value(0), fade: new Animated.Value(shouldEnter(!loaded.current, reduced) ? 0 : 1), shown: 0, joined: loaded.current };
       const made = m;
       made.slide.addListener(({ value }) => (made.shown = value));
       motions.current.set(key, m);
@@ -70,11 +70,23 @@ export function Glide({ children, gap = 0 }: { children: ReactNode; gap?: number
 
   return (
     <View style={{ gap }}>
-      {items.map(({ key, node, motion: m }) => (
-        <Animated.View key={key} onLayout={report(key)} style={{ opacity: m.fade, transform: [{ translateY: m.slide }] }}>
-          {node}
-        </Animated.View>
-      ))}
+      {items.map(({ key, node, motion: m }) => {
+        // A joiner stays out of the flow until measured, so the cards below hold their places
+        // until we know how far to slide them.
+        const unmeasured = m.joined && heights[key] === undefined;
+        return (
+          <Animated.View
+            key={key}
+            onLayout={report(key)}
+            style={[
+              { opacity: m.fade, transform: [{ translateY: m.slide }] },
+              unmeasured && { position: "absolute", left: 0, right: 0, top: 0 },
+            ]}
+          >
+            {node}
+          </Animated.View>
+        );
+      })}
     </View>
   );
 }

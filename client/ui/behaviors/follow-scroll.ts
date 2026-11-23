@@ -3,8 +3,12 @@
 
 export type FollowLayout = { replyTop: number | null; contentHeight: number; viewportHeight: number };
 
+/** What following aims at: the top of the latest reply, or the bottom (after the user returns there). */
+export type FollowAnchor = "reply" | "bottom";
+
 export type FollowState = {
   following: boolean;
+  anchor: FollowAnchor;
   /** Last known scroll offset. */
   offset: number;
   /** Offset we scrolled to ourselves. The next scroll event at it is an echo, not the user. */
@@ -24,6 +28,7 @@ export type FollowResult = { state: FollowState; scrollTo: number | null };
 
 export const initialFollow: FollowState = {
   following: true,
+  anchor: "reply",
   offset: 0,
   expected: null,
   layout: { replyTop: null, contentHeight: 0, viewportHeight: 0 },
@@ -36,9 +41,9 @@ const BOTTOM_SLACK = 8;
 const maxOffset = (l: FollowLayout) => Math.max(0, l.contentHeight - l.viewportHeight);
 
 /** Top of the latest reply, or the bottom before the turn has one. Clamped to the scroll range. */
-export function followTarget(l: FollowLayout): number {
+export function followTarget(l: FollowLayout, anchor: FollowAnchor = "reply"): number {
   const max = maxOffset(l);
-  return Math.min(max, Math.max(0, l.replyTop ?? max));
+  return anchor === "bottom" ? max : Math.min(max, Math.max(0, l.replyTop ?? max));
 }
 
 function goTo(state: FollowState, y: number): FollowResult {
@@ -50,22 +55,24 @@ export function followReduce(state: FollowState, event: FollowEvent): FollowResu
   switch (event.type) {
     case "layout": {
       const next = { ...state, layout: { replyTop: event.replyTop, contentHeight: event.contentHeight, viewportHeight: event.viewportHeight } };
-      return next.following ? goTo(next, followTarget(next.layout)) : { state: next, scrollTo: null };
+      return next.following ? goTo(next, followTarget(next.layout, next.anchor)) : { state: next, scrollTo: null };
     }
     case "scroll": {
       const echo = state.expected !== null && Math.abs(event.offset - state.expected) <= EPSILON;
       if (echo) return { state: { ...state, offset: event.offset, expected: null }, scrollTo: null };
-      // A scroll that lands on the follow target is not the user leaving it. Scrolling back to
-      // the bottom by hand follows again.
-      const atTarget = state.following && Math.abs(event.offset - followTarget(state.layout)) <= EPSILON;
+      // A scroll that lands on the follow target is not the user leaving it. Reaching the bottom by
+      // hand follows again, and keeps following the bottom: a tall reply's top is above it, and
+      // aiming there would pull the user back up.
+      const atTarget = state.following && Math.abs(event.offset - followTarget(state.layout, state.anchor)) <= EPSILON;
       const atBottom = event.offset >= maxOffset(state.layout) - BOTTOM_SLACK;
+      const anchor: FollowAnchor = atBottom && !atTarget ? "bottom" : state.anchor;
       return {
-        state: { ...state, offset: event.offset, expected: null, following: atTarget || atBottom },
+        state: { ...state, offset: event.offset, expected: null, following: atTarget || atBottom, anchor },
         scrollTo: null,
       };
     }
     case "prompt":
-      return goTo({ ...state, following: true }, followTarget(state.layout));
+      return goTo({ ...state, following: true, anchor: "reply" }, followTarget(state.layout));
     case "prepend": {
       const y = state.offset + event.addedHeight;
       return { state: { ...state, following: false, offset: y, expected: y }, scrollTo: y };

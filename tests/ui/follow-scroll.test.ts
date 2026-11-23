@@ -102,3 +102,22 @@ describe("re-attach", () => {
     expect(state.following).toBe(false);
   });
 });
+
+describe("tall reply", () => {
+  it("follows the bottom, not the reply top, once the user returns to the bottom", () => {
+    const { state, cmds } = run([
+      layout(2000, 500), // reply top 500, bottom 1600
+      { type: "scroll", offset: 200 },
+      { type: "scroll", offset: 1600 },
+      layout(2100, 500),
+    ]);
+    expect(state.following).toBe(true);
+    expect(state.anchor).toBe("bottom");
+    expect(cmds.at(-1)).toBe(1700);
+  });
+  it("goes back to the reply top on the next prompt", () => {
+    const { state, cmds } = run([layout(2000, 500), { type: "scroll", offset: 200 }, { type: "scroll", offset: 1600 }, { type: "prompt" }]);
+    expect(state.anchor).toBe("reply");
+    expect(cmds.at(-1)).toBe(500);
+  });
+});
