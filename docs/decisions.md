@@ -12,3 +12,6 @@ Append only. One entry per decision.
 - **2026-11-23: Clean-room rebuild, not a refactor of `session-board`.** Chosen so configuration and extension are first-class from the start. Refactor was the viable alternative.
 - **2026-11-23: Self-contained.** No dependency on any other plugin, and no shared UI kit across plugins. The kit lives in this plugin. `session-board` is read-only reference, never imported.
 - **2026-11-23: Tooling.** pnpm, vitest, fast-check, `src/` at repo root.
+- **2026-11-23: Column sections are optional and set through `buckets`.** A column that declares sections groups its cards by state bucket. One that doesn't has a single unlabelled section.
+- **2026-11-23: Permission cards top the Running column through the expanded-first rule**, not a sort key. A permission card is always expanded, so it sorts above compact cards.
+- **2026-11-23: UI targets React Native primitives.** Screens receive `theme` as a prop. Tokens derive from it, plus fixed colors the theme lacks.
