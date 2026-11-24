@@ -3,7 +3,7 @@ import { Icon } from "@getpaseo/plugin/client/ui";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Platform, Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { useFont, usePalette } from "../tokens/context";
-import { radius, size, space, tint, toneColor, type Tone } from "../tokens/tokens";
+import { icon, opacity, radius, size, space, tint, toneColor, type Tone } from "../tokens/tokens";
 import { canStep, stepValue } from "./stepper-math";
 
 /**
@@ -28,9 +28,9 @@ function SpinnerDot({ color }: { color: string }) {
   return (
     <View style={{ width: d, height: d, alignItems: "center", justifyContent: "center" }}>
       <Animated.View
-        style={{ position: "absolute", width: d, height: d, borderRadius: d / 2, borderWidth: 1.5, borderColor: tint(color, 0.22), borderTopColor: color, transform: [{ rotate }] }}
+        style={{ position: "absolute", width: d, height: d, borderRadius: d / 2, borderWidth: size.spinnerRing, borderColor: tint(color, 0.22), borderTopColor: color, transform: [{ rotate }] }}
       />
-      <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: color }} />
+      <View style={{ width: size.spinnerCore, height: size.spinnerCore, borderRadius: size.spinnerCore / 2, backgroundColor: color }} />
     </View>
   );
 }
@@ -70,19 +70,19 @@ export function Btn(props: {
         {
           flexDirection: "row",
           alignItems: "center",
-          gap: 5,
-          paddingHorizontal: props.small ? 8 : 11,
-          paddingVertical: props.small ? 3 : 6,
+          gap: space.tight,
+          paddingHorizontal: props.small ? space.md : space.cozy,
+          paddingVertical: props.small ? space.thin : space.run,
           borderRadius: radius.control,
-          borderWidth: variant === "ghost" ? 0 : 1,
+          borderWidth: variant === "ghost" ? 0 : size.hairline,
           borderColor: variant === "plain" ? p.border : fill,
           backgroundColor: fill,
-          opacity: props.disabled ? 0.45 : pressed ? 0.75 : 1,
+          opacity: props.disabled ? opacity.disabled : pressed ? opacity.pressed : 1,
         },
         props.style,
       ]}
     >
-      {props.icon ? <Icon name={props.icon} size={f.md} color={fg} /> : null}
+      {props.icon ? <Icon name={props.icon} size={icon.sm} color={fg} /> : null}
       <Text style={{ color: fg, fontSize: f.sm, fontWeight: variant === "solid" ? "600" : "400" }}>{props.label}</Text>
     </Pressable>
   );
@@ -104,11 +104,11 @@ export function IconButton(props: { icon: string; label: string; onPress: () => 
         borderRadius: radius.control,
         alignItems: "center",
         justifyContent: "center",
-        opacity: props.disabled ? 0.4 : 1,
+        opacity: props.disabled ? opacity.disabled : 1,
         backgroundColor: props.active || pressed ? tint(p.border, 0.6) : "transparent",
       })}
     >
-      <Icon name={props.icon} size={15} color={p.muted} />
+      <Icon name={props.icon} size={icon.lg} color={p.muted} />
     </Pressable>
   );
 }
@@ -129,7 +129,7 @@ export function Chip(props: { label: string; count?: number; selected?: boolean;
         paddingHorizontal: space.md,
         height: size.control - space.md,
         borderRadius: radius.pill,
-        borderWidth: 1,
+        borderWidth: size.hairline,
         borderColor: props.selected ? color : p.border,
         backgroundColor: props.selected ? tint(color, 0.15) : "transparent",
       }}
@@ -147,7 +147,7 @@ export function Badge({ count, tone = "neutral", color }: { count: number; tone?
   if (count <= 0) return null;
   const c = color ?? toneColor(p, tone);
   return (
-    <View accessibilityLabel={`${count}`} style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: radius.pill, backgroundColor: tint(c, 0.16) }}>
+    <View accessibilityLabel={`${count}`} style={{ paddingHorizontal: space.run, paddingVertical: size.hairline, borderRadius: radius.pill, backgroundColor: tint(c, 0.16) }}>
       <Text style={{ color: c, fontSize: f.xxs, fontWeight: "600" }}>{count}</Text>
     </View>
   );
@@ -195,9 +195,9 @@ export function Stepper(props: {
     />
   );
   return (
-    <View accessibilityLabel={props.label} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+    <View accessibilityLabel={props.label} style={{ flexDirection: "row", alignItems: "center", gap: space.run }}>
       {button(-1)}
-      <Text style={{ color: p.text, fontSize: f.sm, minWidth: 46, textAlign: "center", fontVariant: ["tabular-nums"] }}>{(props.format ?? String)(props.value)}</Text>
+      <Text style={{ color: p.text, fontSize: f.sm, minWidth: size.stepperValue, textAlign: "center", fontVariant: ["tabular-nums"] }}>{(props.format ?? String)(props.value)}</Text>
       {button(1)}
     </View>
   );
@@ -213,9 +213,9 @@ export function Segmented<V extends string>(props: {
   const p = usePalette();
   const f = useFont();
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.run }}>
       {props.label ? <Text style={{ color: p.muted, fontSize: f.sm }}>{props.label}</Text> : null}
-      <View accessibilityRole="radiogroup" style={{ flexDirection: "row", padding: 2, borderRadius: 7, borderWidth: 1, borderColor: p.border }}>
+      <View accessibilityRole="radiogroup" style={{ flexDirection: "row", padding: space.xs, borderRadius: radius.segment, borderWidth: size.hairline, borderColor: p.border }}>
         {props.options.map((o) => {
           const on = o.value === props.value;
           return (
@@ -224,7 +224,7 @@ export function Segmented<V extends string>(props: {
               accessibilityRole="radio"
               accessibilityState={{ checked: on }}
               onPress={() => props.onChange(o.value)}
-              style={({ pressed }) => ({ paddingHorizontal: 9, paddingVertical: 3, borderRadius: 5, backgroundColor: on ? tint(p.border, 0.9) : pressed ? tint(p.border, 0.4) : "transparent" })}
+              style={({ pressed }) => ({ paddingHorizontal: space.snug, paddingVertical: space.thin, borderRadius: radius.option, backgroundColor: on ? tint(p.border, 0.9) : pressed ? tint(p.border, 0.4) : "transparent" })}
             >
               <Text style={{ color: on ? p.text : p.muted, fontSize: f.sm }}>{o.label}</Text>
             </Pressable>
@@ -239,7 +239,7 @@ export function Segmented<V extends string>(props: {
 export function LabeledRule({ label }: { label: string }) {
   const p = usePalette();
   const f = useFont();
-  const line = <View style={{ flex: 1, height: 1, backgroundColor: p.border }} />;
+  const line = <View style={{ flex: 1, height: size.hairline, backgroundColor: p.border }} />;
   return (
     <View accessibilityRole="header" style={{ flexDirection: "row", alignItems: "center", gap: space.md }}>
       {line}

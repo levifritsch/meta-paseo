@@ -7,7 +7,7 @@ import type { CardExtras } from "../../data/card-map";
 import { Badge, IconButton, useHover } from "../atoms";
 import { Fade, FocusScope, Glide } from "../behaviors";
 import { FontScaleProvider, useFont, usePalette } from "../tokens/context";
-import { font, size, space, stateColor, tint } from "../tokens/tokens";
+import { font, icon, radius, size, space, stateColor, tint } from "../tokens/tokens";
 import { Card } from "./Card";
 import { columnCounts } from "./column-view";
 
@@ -37,9 +37,9 @@ function FoldedColumn(props: { column: LayoutColumn; height: number; states: Rea
   const ids = props.column.sections.flatMap((s) => s.cards.map((c) => c.id));
   const dots = ids.slice(0, size.stripDots);
   const extra = ids.length - dots.length;
-  const dotsHeight = dots.length * 15 + (extra > 0 ? 16 : 0);
+  const dotsHeight = dots.length * size.stripDotRow + (extra > 0 ? size.stripMore : 0);
   // The name gets what the dots leave, up to a readable length.
-  const label = Math.max(40, Math.min(260, props.height - dotsHeight - size.stripTop - 30));
+  const label = Math.max(size.stripLabelMin, Math.min(size.stripLabelMax, props.height - dotsHeight - size.stripTop - size.stripLabelRoom));
   return (
     <View style={{ paddingHorizontal: size.gutter }}>
       <Pressable
@@ -47,23 +47,23 @@ function FoldedColumn(props: { column: LayoutColumn; height: number; states: Rea
         accessibilityLabel={`Open ${props.column.title} (${ids.length} sessions)`}
         onPress={props.onPress}
         {...hover}
-        style={{ width: size.strip, height: props.height, alignItems: "center", paddingTop: size.stripTop, borderRadius: 10, overflow: "hidden", backgroundColor: hovered ? tint(p.border, 0.4) : "transparent" }}
+        style={{ width: size.strip, height: props.height, alignItems: "center", paddingTop: size.stripTop, borderRadius: radius.bubble, overflow: "hidden", backgroundColor: hovered ? tint(p.border, 0.4) : "transparent" }}
       >
         {/* A row as long as the label space, turned a quarter clockwise: it reads top to bottom. */}
         <View style={{ width: size.strip, height: label }}>
-          <View style={{ position: "absolute", top: label / 2 - 13, left: (size.strip - label) / 2, width: label, height: 26, justifyContent: "center", transform: [{ rotate: "90deg" }] }}>
+          <View style={{ position: "absolute", top: (label - size.stripLabelHeight) / 2, left: (size.strip - label) / 2, width: label, height: size.stripLabelHeight, justifyContent: "center", transform: [{ rotate: "90deg" }] }}>
             <Text numberOfLines={1} style={{ color: p.text, fontSize: font.heading, fontWeight: "700" }}>
               {props.column.title}
             </Text>
           </View>
         </View>
-        <View style={{ marginTop: 14, alignItems: "center" }}>
+        <View style={{ marginTop: space.pad, alignItems: "center" }}>
           {dots.map((id) => (
-            <View key={id} style={{ height: 15, justifyContent: "center" }}>
+            <View key={id} style={{ height: size.stripDotRow, justifyContent: "center" }}>
               <View style={{ width: size.dot, height: size.dot, borderRadius: size.dot / 2, backgroundColor: stateColor(p, props.states[id] ?? "done") }} />
             </View>
           ))}
-          {extra > 0 ? <Text style={{ color: p.muted, fontSize: font.xxs, height: 16 }}>+{extra}</Text> : null}
+          {extra > 0 ? <Text style={{ color: p.muted, fontSize: font.xxs, height: size.stripMore }}>+{extra}</Text> : null}
         </View>
       </Pressable>
     </View>
@@ -94,7 +94,7 @@ export function Column(props: ColumnProps) {
     <View style={{ width: props.width + size.gutter * 2, height: props.height }}>
       {/* Headers keep the unscaled sizes: only card text scales. */}
       <FontScaleProvider scale={1}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: space.md, paddingTop: 8, paddingBottom: 6, paddingHorizontal: size.gutter + 14 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: space.md, paddingTop: space.md, paddingBottom: space.run, paddingHorizontal: size.gutter + space.pad }}>
           <Text numberOfLines={1} style={{ flex: 1, minWidth: 0, color: p.text, fontWeight: "700", fontSize: font.heading }}>
             {column.title}
           </Text>
@@ -102,19 +102,19 @@ export function Column(props: ColumnProps) {
           {/* The new-chat card arrives in step 6. */}
           <IconButton icon="Plus" label={`New chat in ${column.title}`} disabled onPress={() => {}} />
           <Pressable accessibilityRole="button" accessibilityLabel={`Fold ${column.title}`} onPress={props.onToggleFold} hitSlop={6}>
-            <Icon name="FoldHorizontal" size={15} color={p.muted} />
+            <Icon name="FoldHorizontal" size={icon.lg} color={p.muted} />
           </Pressable>
         </View>
       </FontScaleProvider>
       <View style={{ flex: 1, minHeight: 0 }}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: 10, paddingBottom: 16, paddingHorizontal: size.gutter, gap: 12 }}>
-          {column.count === 0 ? <Text style={{ color: p.muted, fontSize: f.sm, paddingHorizontal: 14, paddingTop: 10 }}>No sessions here.</Text> : null}
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: space.mid, paddingBottom: space.xl, paddingHorizontal: size.gutter, gap: space.lg }}>
+          {column.count === 0 ? <Text style={{ color: p.muted, fontSize: f.sm, paddingHorizontal: space.pad, paddingTop: space.mid }}>No sessions here.</Text> : null}
           {sections.map((s) => (
-            <View key={s.id || "all"} style={{ gap: 12 }}>
+            <View key={s.id || "all"} style={{ gap: space.lg }}>
               {s.label ? (
-                <Text style={{ color: p.muted, fontSize: f.xxs, letterSpacing: 0.5, textTransform: "uppercase", paddingTop: 10, paddingHorizontal: 14, marginBottom: -4 }}>{s.label}</Text>
+                <Text style={{ color: p.muted, fontSize: f.xxs, letterSpacing: 0.5, textTransform: "uppercase", paddingTop: space.mid, paddingHorizontal: space.pad, marginBottom: -space.sm }}>{s.label}</Text>
               ) : null}
-              <Glide gap={12}>
+              <Glide gap={space.lg}>
                 {s.cards.map(({ id, expanded }) => {
                   const card = props.cards.get(id);
                   if (!card) return null;
@@ -138,7 +138,7 @@ export function Column(props: ColumnProps) {
             </View>
           ))}
         </ScrollView>
-        <Fade color={p.bg} edge="top" height={20} />
+        <Fade color={p.bg} edge="top" height={size.columnFade} />
       </View>
     </View>
   );

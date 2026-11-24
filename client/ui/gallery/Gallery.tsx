@@ -3,8 +3,10 @@ import type { PluginScreenProps } from "@getpaseo/plugin/client";
 import { useState, type ReactNode } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { Badge, Btn, Chip, Dot, LabeledRule, Segmented, Stepper, Switch } from "../atoms";
-import { FONT_SCALE, SESSION_COLORS, TokensProvider, font, space, stateColor, usePalette } from "../tokens";
-import { CARD_STATES } from "../../../shared/core";
+import { SESSION_COLORS, TokensProvider, font, space, stateColor, usePalette } from "../tokens";
+import { CARD_STATES, VIEW_LIMITS } from "../../../shared/core";
+
+const FONT_SCALE = VIEW_LIMITS.fontScale;
 
 function Row({ title, children }: { title: string; children: ReactNode }) {
   const p = usePalette();

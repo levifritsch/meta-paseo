@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { IconButton, useHover } from "../atoms";
 import { useFont, usePalette } from "../tokens/context";
-import { MONO, radius, size, tint } from "../tokens/tokens";
+import { MONO, icon, radius, size, space, tint } from "../tokens/tokens";
 import { Popover, usePopover, type Anchor } from "./Popover";
 
 export type MenuRow = {
@@ -33,14 +33,14 @@ function Row({ row, onRun }: { row: MenuRow; onRun: (row: MenuRow) => void }) {
       style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",
-        gap: 9,
+        gap: space.snug,
         height: size.menuRow,
-        paddingHorizontal: 9,
+        paddingHorizontal: space.snug,
         borderRadius: radius.control,
         backgroundColor: pressed ? tint(p.border, 0.75) : hovered ? tint(p.border, 0.45) : "transparent",
       })}
     >
-      <Icon name={row.icon} size={14} color={row.danger ? p.error : p.muted} />
+      <Icon name={row.icon} size={icon.md} color={row.danger ? p.error : p.muted} />
       <Text style={{ flex: 1, color: row.danger ? p.error : p.text, fontSize: f.md }}>{asking && row.confirm ? row.confirm : row.label}</Text>
       {row.hint ? <Text style={{ color: p.muted, fontSize: f.xxs, fontFamily: MONO }}>{row.hint}</Text> : null}
     </Pressable>
@@ -62,10 +62,10 @@ export function MenuButton({ label, groups }: { label: string; groups: readonly 
       <View ref={pop.ref} collapsable={false}>
         <IconButton icon="Ellipsis" label={label} active={pop.at !== null} onPress={pop.at ? pop.close : pop.open} />
       </View>
-      <Popover at={pop.at} width={size.menuWidth} height={rows * size.menuRow + (groups.length - 1) * 9 + 8} label="menu" onClose={pop.close}>
+      <Popover at={pop.at} width={size.menuWidth} height={rows * size.menuRow + (groups.length - 1) * size.menuRule + 2 * size.popoverPad} label="menu" onClose={pop.close}>
         {groups.map((group, i) => (
           <View key={i}>
-            {i > 0 ? <View style={{ height: 1, backgroundColor: p.border, marginVertical: 4, marginHorizontal: 2 }} /> : null}
+            {i > 0 ? <View style={{ height: size.hairline, backgroundColor: p.border, marginVertical: space.sm, marginHorizontal: space.xs }} /> : null}
             {group.map((row) => (
               <Row key={row.key} row={row} onRun={run} />
             ))}

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { CARD_STATES } from "../../shared/core";
 import { canStep, stepValue } from "../../client/ui/atoms/stepper-math";
-import { FONT_SCALE, SESSION_COLORS, font, fadeBands, isDark, mix, palette, scaledFont, stateColor, tint } from "../../client/ui/tokens";
+import { VIEW_LIMITS } from "../../shared/core";
+import { SESSION_COLORS, font, fadeBands, isDark, mix, palette, scaledFont, stateColor, tint } from "../../client/ui/tokens";
 
 const theme = {
   colors: {
@@ -29,7 +30,7 @@ describe("tokens", () => {
 });
 
 describe("stepper math", () => {
-  const { min, max, step } = FONT_SCALE;
+  const { min, max, step } = VIEW_LIMITS.fontScale;
   it("steps without float drift", () => {
     let v: number = min;
     for (let i = 0; i < 3; i++) v = stepValue(v, 1, min, max, step);

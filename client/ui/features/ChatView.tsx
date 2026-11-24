@@ -8,11 +8,11 @@ import { Btn, LabeledRule } from "../atoms";
 import { Fade, useFollowScroll, usePrepend } from "../behaviors";
 import { ChatRow, Composer } from "../molecules";
 import { useFont, usePalette } from "../tokens/context";
-import { chatBackground, size, space } from "../tokens/tokens";
+import { chatBackground, icon, opacity, radius, shadow, size, space } from "../tokens/tokens";
 import { RequestPanel } from "./requests";
 
 /** Chat contents sit a little closer to the background than the card's own text. */
-const CHAT_EMPHASIS = 0.8;
+const CHAT_EMPHASIS = opacity.chat;
 
 /**
  * A session's chat: the last turns, live, with Show earlier, the oldest request, and a message box.
@@ -80,7 +80,7 @@ export function ChatView({ agentId, hideChat = false, chatHeight, color, trailin
     <View style={{ flex: hideChat || chatHeight ? undefined : 1 }}>
       {!hideChat && (
         <View style={{ flex: chatHeight ? undefined : 1, height: chatHeight, backgroundColor: chatBackground(p) }}>
-          <ScrollView {...scroll.scrollProps} contentContainerStyle={{ paddingHorizontal: size.gutter, paddingVertical: size.fade - 6, gap: space.xl, opacity: CHAT_EMPHASIS }}>
+          <ScrollView {...scroll.scrollProps} contentContainerStyle={{ paddingHorizontal: size.gutter, paddingVertical: size.fade - space.run, gap: space.xl, opacity: CHAT_EMPHASIS }}>
             {chat.hasOlder && (
               <Btn small label={loadingOlder ? "Loading…" : "Show earlier"} variant="ghost" disabled={loadingOlder} onPress={showEarlier} style={{ alignSelf: "center" }} />
             )}
@@ -99,7 +99,7 @@ export function ChatView({ agentId, hideChat = false, chatHeight, color, trailin
           <Fade color={p.card} edge="top" height={size.fade} />
           <Fade color={p.card} edge="bottom" height={size.fade} />
           {footnote ? (
-            <View pointerEvents="none" style={{ position: "absolute", left: 16, right: 130, bottom: 6, flexDirection: "row", alignItems: "center" }}>
+            <View pointerEvents="none" style={{ position: "absolute", left: space.xl, right: size.footnoteRight, bottom: space.run, flexDirection: "row", alignItems: "center" }}>
               {footnote}
             </View>
           ) : null}
@@ -114,28 +114,25 @@ export function ChatView({ agentId, hideChat = false, chatHeight, color, trailin
                 bottom: size.composerInset,
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 4,
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                borderRadius: 99,
-                borderWidth: 1,
+                gap: space.sm,
+                paddingHorizontal: space.mid,
+                paddingVertical: space.tight,
+                borderRadius: radius.pill,
+                borderWidth: size.hairline,
                 borderColor: p.border,
                 backgroundColor: p.card,
-                opacity: pressed ? 0.8 : 1,
-                shadowColor: "#000",
-                shadowOpacity: 0.18,
-                shadowRadius: 6,
-                shadowOffset: { width: 0, height: 2 },
+                opacity: pressed ? opacity.pressed : 1,
+                ...shadow.pill,
               })}
             >
-              <Icon name="ArrowDown" size={12} color={p.text} />
+              <Icon name="ArrowDown" size={icon.xs} color={p.text} />
               <Text style={{ color: p.text, fontSize: f.xs }}>Jump to latest</Text>
             </Pressable>
           )}
         </View>
       )}
       {request && (
-        <View style={{ paddingHorizontal: size.gutter, paddingTop: 2, paddingBottom: 10 }}>
+        <View style={{ paddingHorizontal: size.gutter, paddingTop: space.xs, paddingBottom: space.mid }}>
           <RequestPanel
             key={request.id}
             request={request}
@@ -144,7 +141,7 @@ export function ChatView({ agentId, hideChat = false, chatHeight, color, trailin
           />
         </View>
       )}
-      {request && <View style={{ height: 1, backgroundColor: p.border, marginHorizontal: size.gutter, marginBottom: 10 }} />}
+      {request && <View style={{ height: size.hairline, backgroundColor: p.border, marginHorizontal: size.gutter, marginBottom: space.mid }} />}
       {sendError && <Text style={{ color: p.error, fontSize: f.sm, paddingHorizontal: size.gutter, paddingBottom: space.md }}>{sendError}</Text>}
       <Composer value={draft} onChange={setDraft} onSend={send} color={color} placeholder={running ? "Message (steers the current turn)" : "Message the agent"} />
     </View>

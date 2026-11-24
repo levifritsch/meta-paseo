@@ -4,15 +4,14 @@ import { Pressable, Text, View } from "react-native";
 import { Stepper, useHover } from "../atoms";
 import { Popover, usePopover } from "../molecules";
 import { useFont, usePalette } from "../tokens/context";
-import { FONT_SCALE, radius, size, tint } from "../tokens/tokens";
-
-export const COLUMN_WIDTH = { min: 240, max: 720, step: 40 } as const;
+import { VIEW_LIMITS } from "../../../shared/core";
+import { icon, radius, size, space, tint } from "../tokens/tokens";
 
 function OptionRow(props: { label: string; children: React.ReactNode }) {
   const p = usePalette();
   const f = useFont();
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 9, height: size.menuRow }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.run, paddingHorizontal: space.snug, height: size.menuRow }}>
       <Text style={{ flex: 1, color: p.text, fontSize: f.md }}>{props.label}</Text>
       {props.children}
     </View>
@@ -36,25 +35,25 @@ export function ViewOptions(props: { columnWidth: number; fontScale: number; onC
           style={({ pressed }) => ({
             flexDirection: "row",
             alignItems: "center",
-            gap: 5,
-            paddingHorizontal: 8,
-            paddingVertical: 3,
+            gap: space.tight,
+            paddingHorizontal: space.md,
+            paddingVertical: space.thin,
             borderRadius: radius.control,
-            borderWidth: 1,
+            borderWidth: size.hairline,
             borderColor: p.border,
             backgroundColor: pop.at ? tint(p.border, 0.6) : pressed || hovered ? tint(p.border, 0.4) : "transparent",
           })}
         >
           <Text style={{ color: p.text, fontSize: f.sm }}>View Options</Text>
-          <Icon name="ChevronDown" size={13} color={p.muted} />
+          <Icon name="ChevronDown" size={icon.sm} color={p.muted} />
         </Pressable>
       </View>
-      <Popover at={pop.at} width={size.optionsWidth} height={2 * size.menuRow + 8} label="view options" onClose={pop.close}>
+      <Popover at={pop.at} width={size.optionsWidth} height={2 * size.menuRow + 2 * space.sm} label="view options" onClose={pop.close}>
         <OptionRow label="Column width">
-          <Stepper label="column width" {...COLUMN_WIDTH} value={props.columnWidth} format={(v) => `${v}px`} onChange={props.onColumnWidth} />
+          <Stepper label="column width" {...VIEW_LIMITS.columnWidth} value={props.columnWidth} format={(v) => `${v}px`} onChange={props.onColumnWidth} />
         </OptionRow>
         <OptionRow label="Card font scale">
-          <Stepper label="card font scale" min={FONT_SCALE.min} max={FONT_SCALE.max} step={FONT_SCALE.step} value={props.fontScale} format={(v) => `${Math.round(v * 100)}%`} onChange={props.onFontScale} />
+          <Stepper label="card font scale" {...VIEW_LIMITS.fontScale} value={props.fontScale} format={(v) => `${Math.round(v * 100)}%`} onChange={props.onFontScale} />
         </OptionRow>
       </Popover>
     </>

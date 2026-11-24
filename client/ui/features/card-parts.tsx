@@ -3,7 +3,7 @@ import { Icon } from "@getpaseo/plugin/client/ui";
 import { Pressable, Text, View } from "react-native";
 import { useHover } from "../atoms";
 import { useFont, usePalette } from "../tokens/context";
-import { halo, type Palette } from "../tokens/tokens";
+import { halo, icon, size, space, type Palette } from "../tokens/tokens";
 
 const clip = { overflow: "hidden" } as const;
 
@@ -32,7 +32,7 @@ export function TitleLink(props: { title: string; lines: number; onOpen?: () => 
 export function MetaTags(props: { model?: string; contextPercent: number | null; subAgents: number; backgroundTasks: number; over?: boolean }) {
   const p = usePalette();
   const f = useFont();
-  const shadow = props.over ? [halo(p.card), { padding: 12, margin: -12 }] : null;
+  const shadow = props.over ? [halo(p.card), { padding: space.lg, margin: -space.lg }] : null;
   const small = { color: p.muted, fontSize: f.xs, fontVariant: ["tabular-nums" as const] };
   const label = [
     props.contextPercent === null ? null : `Context used ${props.contextPercent} percent`,
@@ -48,18 +48,18 @@ export function MetaTags(props: { model?: string; contextPercent: number | null;
           {props.model}
         </Text>
       ) : null}
-      {props.contextPercent !== null ? <Text style={[small, { marginLeft: 8 }, shadow]}>◔ {props.contextPercent}%</Text> : null}
-      {props.subAgents > 0 ? <Count icon="Bot" n={props.subAgents} color={p.muted} shadow={shadow} /> : null}
-      {props.backgroundTasks > 0 ? <Count icon="Terminal" n={props.backgroundTasks} color={p.running} shadow={shadow} /> : null}
+      {props.contextPercent !== null ? <Text style={[small, { marginLeft: space.md }, shadow]}>◔ {props.contextPercent}%</Text> : null}
+      {props.subAgents > 0 ? <Count name="Bot" n={props.subAgents} color={p.muted} shadow={shadow} /> : null}
+      {props.backgroundTasks > 0 ? <Count name="Terminal" n={props.backgroundTasks} color={p.running} shadow={shadow} /> : null}
     </View>
   );
 }
 
-function Count({ icon, n, color, shadow }: { icon: string; n: number; color: string; shadow: unknown }) {
+function Count({ name, n, color, shadow }: { name: string; n: number; color: string; shadow: unknown }) {
   const f = useFont();
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginLeft: 8 }}>
-      <Icon name={icon} size={12} color={color} />
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm, marginLeft: space.md }}>
+      <Icon name={name} size={icon.xs} color={color} />
       <Text style={[{ color, fontSize: f.xs, fontVariant: ["tabular-nums"] }, shadow as object]}>{n}</Text>
     </View>
   );
@@ -70,9 +70,9 @@ export function ChatToggle({ open, onPress }: { open: boolean; onPress: () => vo
   const p: Palette = usePalette();
   const f = useFont();
   const { hovered, props } = useHover();
-  const rule = <View style={{ flex: 1, height: 1, backgroundColor: p.border }} />;
+  const rule = <View style={{ flex: 1, height: size.hairline, backgroundColor: p.border }} />;
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 8 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.mid, paddingHorizontal: space.pad, paddingVertical: space.md }}>
       {rule}
       <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={onPress} {...props} hitSlop={6}>
         <Text style={{ color: p.accent, fontSize: f.sm, textDecorationLine: hovered ? "underline" : "none" }}>{open ? "Hide chat" : "Show chat"}</Text>

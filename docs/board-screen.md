@@ -109,6 +109,18 @@ Implemented in `card-map.ts`. Still needs checking against real snapshots.
 - **Font scale touches every component.** Do it as one mechanical change, not piecemeal.
 - **The spec is unverified against code.** The first real data will expose gaps. Expect spec edits, logged in `decisions.md`.
 
+## Follow-ups from the philosophy check
+
+After the visual pass (d888a83) a review against `philosophy.md` found five leaks. 1 to 3 are fixed; 4 and 5 wait.
+
+1. ~~Two homes for the view limits.~~ Fixed: `VIEW_LIMITS` in core now carries `step`, and the schema, the steppers and the tests read it. The duplicate `COLUMN_WIDTH` and tokens `FONT_SCALE` are gone.
+2. ~~Magic numbers outside `tokens.ts`.~~ Fixed: spacing steps, icon sizes, opacities, shadows, shares, leading and the strip, chat and picker sizes are named tokens, and no UI file outside the dev screens holds a layout literal. Left as literals on purpose: `flex: 1`, `0`, and structural `minWidth: 0`.
+3. ~~`f.lg - 1`.~~ Fixed: it was `font.md` (13).
+4. **Menu rows are not a registry.** Card menu actions are an extension point in `architecture.md`, but `Card.tsx` builds the rows inline. Before 4b.6 (rename, interrupt), turn them into registry entries, `{ key, group, when(card), row(ctx) }`, so a new action is a new entry and not an edit to `Card`.
+5. **Display rules are fixed in code, not data.** The column badge order and set (`COUNTED` in `column-view.ts`), hiding a group with no cards, and the state-counts versus total split are not in the board definition. Move them into the definition when step 5 (the queue, with its own filter) needs the same kind of choice.
+
+Still unaudited for literals: the dev screens under `client/ui/gallery/` (they stay until 4b is accepted).
+
 ## Open questions
 
 1. ~~How do we tell a sub-agent, a background session and an internal one apart?~~ Answered in 4b.1: a sub-agent has the label `paseo.parent-agent-id`, a background session has `background`, an internal one `internal`. The list call needs `filter.includeBackground`; internal sessions are left out by default.

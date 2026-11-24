@@ -38,7 +38,8 @@ export type BoardState = { folded: Record<string, boolean>; workspaceOrder: stri
 
 /** How the board looks on this client. Card text scales; the top bar and headers do not. */
 export type BoardView = { columnWidth: number; fontScale: number };
-export const VIEW_LIMITS = { columnWidth: { min: 240, max: 720 }, fontScale: { min: 0.8, max: 1.5 } } as const;
+/** The one home for the view options' range and step: the schema, the steppers and the tests read it. */
+export const VIEW_LIMITS = { columnWidth: { min: 240, max: 720, step: 40 }, fontScale: { min: 0.8, max: 1.5, step: 0.1 } } as const;
 export const DEFAULT_VIEW: BoardView = { columnWidth: 360, fontScale: 1 };
 
 export type BoardDef = {

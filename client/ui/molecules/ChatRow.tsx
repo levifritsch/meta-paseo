@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { summarizeTool, type ChatBlock, type ToolStatus } from "../../../shared/core";
 import { usePalette, useFont } from "../tokens/context";
-import { radius, tint, type Palette } from "../tokens/tokens";
+import { opacity, radius, share, space, tint, type Palette } from "../tokens/tokens";
 import { Reply } from "./Reply";
 
 const toolColor = (p: Palette, s: ToolStatus) => (s === "running" ? p.running : s === "failed" ? p.error : p.muted);
 
 /** Tool calls sit back from the conversation. */
-const TOOL_OPACITY = 0.5;
+const TOOL_OPACITY = opacity.tool;
 /** A prompt shows this many lines; a press shows it all. */
 const PROMPT_LINES = 6;
 
@@ -16,7 +16,7 @@ export function ErrorBox({ text }: { text: string }) {
   const p = usePalette();
   const f = useFont();
   return (
-    <View style={{ backgroundColor: tint(p.error, 0.12), borderRadius: radius.control, padding: 8 }}>
+    <View style={{ backgroundColor: tint(p.error, 0.12), borderRadius: radius.control, padding: space.md }}>
       <Text selectable style={{ color: p.error, fontSize: f.sm }}>
         {text}
       </Text>
@@ -32,9 +32,9 @@ function UserBubble({ text }: { text: string }) {
     <Pressable
       accessibilityLabel={open ? "Fold prompt" : "Show the whole prompt"}
       onPress={() => setOpen((v) => !v)}
-      style={{ alignSelf: "flex-end", maxWidth: "88%", backgroundColor: tint(p.border, 0.55), borderRadius: radius.bubble, borderBottomRightRadius: 3, paddingHorizontal: 10, paddingVertical: 6 }}
+      style={{ alignSelf: "flex-end", maxWidth: share.prompt, backgroundColor: tint(p.border, 0.55), borderRadius: radius.bubble, borderBottomRightRadius: radius.tail, paddingHorizontal: space.mid, paddingVertical: space.run }}
     >
-      <Text style={{ color: p.text, fontSize: f.lg - 1 }} numberOfLines={open ? undefined : PROMPT_LINES}>
+      <Text style={{ color: p.text, fontSize: f.md }} numberOfLines={open ? undefined : PROMPT_LINES}>
         {text}
       </Text>
     </Pressable>
@@ -58,7 +58,7 @@ export function ChatRow({ block }: { block: ChatBlock }) {
       );
     case "tool":
       return (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, opacity: TOOL_OPACITY }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: space.run, opacity: TOOL_OPACITY }}>
           <Text style={{ color: toolColor(p, block.status), fontSize: f.xxs }}>{block.status === "running" ? "●" : "▸"}</Text>
           <Text numberOfLines={1} style={{ color: p.muted, fontSize: f.sm, flexShrink: 1 }}>
             <Text style={{ color: p.text, fontWeight: "500" }}>{block.name}</Text>
@@ -68,7 +68,7 @@ export function ChatRow({ block }: { block: ChatBlock }) {
       );
     case "todo":
       return (
-        <View style={{ gap: 2 }}>
+        <View style={{ gap: space.xs }}>
           {block.items.map((t, i) => (
             <Text key={i} style={{ color: t.done ? p.muted : p.text, fontSize: f.sm }}>
               {t.done ? "☑" : "☐"} {t.text}

@@ -3,7 +3,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Modal, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { usePalette } from "../tokens/context";
-import { radius } from "../tokens/tokens";
+import { radius, shadow, size } from "../tokens/tokens";
 import { place, type Anchor } from "./popover-math";
 
 export type { Anchor } from "./popover-math";
@@ -27,16 +27,12 @@ export function Popover(props: { at: Anchor | null; width: number; height: numbe
           position: "absolute",
           ...pos,
           width: props.width,
-          padding: 4,
+          padding: size.popoverPad,
           borderRadius: radius.menu,
-          borderWidth: 1,
+          borderWidth: size.hairline,
           borderColor: p.border,
           backgroundColor: p.card,
-          shadowColor: "#000",
-          shadowOpacity: 0.22,
-          shadowRadius: 14,
-          shadowOffset: { width: 0, height: 6 },
-          elevation: 10,
+          ...shadow.popover,
         }}
       >
         {props.children}

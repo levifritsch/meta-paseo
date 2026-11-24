@@ -7,7 +7,7 @@ import { emptyAnswer, isAnswered, isComplete, selectCustom, setCustomText, shoul
 import { Btn, Chip } from "../atoms";
 import { CodeBlock, Reply } from "../molecules";
 import { usePalette, useFont } from "../tokens/context";
-import { radius, space } from "../tokens/tokens";
+import { leading, radius, size, space } from "../tokens/tokens";
 
 export type RendererProps<K extends RequestKind> = {
   request: Extract<Request, { kind: K }>;
@@ -109,7 +109,7 @@ function QuestionForm({ request, onAnswer }: RendererProps<"question">) {
             accessibilityRole={q.multiSelect ? "checkbox" : "radio"}
             accessibilityState={{ selected: picked }}
             onPress={() => pick(o.label)}
-            style={{ padding: space.md, borderRadius: radius.md, borderWidth: 1, borderColor: picked ? p.accent : p.border, gap: space.xs }}
+            style={{ padding: space.md, borderRadius: radius.md, borderWidth: size.hairline, borderColor: picked ? p.accent : p.border, gap: space.xs }}
           >
             <Text style={{ color: p.text, fontSize: f.md, fontWeight: "600" }}>
               {q.multiSelect ? (picked ? "☑ " : "☐ ") : picked ? "● " : "○ "}
@@ -128,7 +128,7 @@ function QuestionForm({ request, onAnswer }: RendererProps<"question">) {
         onKeyPress={onKeyPress}
         placeholder="Or type your own answer"
         placeholderTextColor={p.muted}
-        style={{ minHeight: 3 * f.md * 1.4 + space.lg, color: p.text, fontSize: f.md, padding: space.md, borderWidth: 1, borderColor: a.custom ? p.accent : p.border, borderRadius: radius.md, opacity: a.custom ? 1 : 0.6 }}
+        style={{ minHeight: 3 * f.md * leading.body + space.lg, color: p.text, fontSize: f.md, padding: space.md, borderWidth: size.hairline, borderColor: a.custom ? p.accent : p.border, borderRadius: radius.md, opacity: a.custom ? 1 : 0.6 }}
       />
       <Btn label="Send answers" onPress={submit} disabled={!complete} style={{ alignSelf: "flex-start" }} />
     </View>

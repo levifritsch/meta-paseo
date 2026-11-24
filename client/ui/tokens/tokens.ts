@@ -69,8 +69,22 @@ export function tint(color: string, alpha: number): string {
   return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
-export const space = { xs: 2, sm: 4, run: 6, md: 8, lg: 12, xl: 16, xxl: 28 } as const;
-export const radius = { sm: 4, control: 6, md: 8, menu: 9, bubble: 10, field: 12, card: 14, pill: 999 } as const;
+/** A scale in the steps the board uses. Names after `md` say where the odd steps sit. */
+export const space = { xs: 2, thin: 3, sm: 4, tight: 5, run: 6, md: 8, snug: 9, mid: 10, cozy: 11, lg: 12, pad: 14, xl: 16, xxl: 28 } as const;
+/** Lucide icon sizes. */
+export const icon = { xs: 12, sm: 13, md: 14, lg: 15, xl: 16 } as const;
+/** Opacities: a pressed control, a disabled one, a faint one, dimmed tool calls and chat. */
+export const opacity = { pressed: 0.75, disabled: 0.45, faint: 0.5, tool: 0.5, chat: 0.8 } as const;
+/** Widths as a share of the parent. */
+export const share = { meta: "45%", prompt: "88%" } as const;
+/** Line height as a multiple of the font size. */
+export const leading = { title: 1.3, body: 1.4 } as const;
+/** Shadows under floating things (`elevation` is Android's). */
+export const shadow = {
+  popover: { shadowColor: "#000", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 10 },
+  pill: { shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 4 },
+} as const;
+export const radius = { tail: 3, sm: 4, option: 5, control: 6, segment: 7, md: 8, menu: 9, bubble: 10, field: 12, card: 14, pill: 999 } as const;
 /** Type sizes at scale 1. `useFont()` returns them scaled. */
 export const font = { xxs: 10.5, xs: 11.5, sm: 12, md: 13, lg: 14, title: 15.5, heading: 18 } as const;
 export type Font = { [K in keyof typeof font]: number };
@@ -80,8 +94,14 @@ export function scaledFont(scale: number): Font {
   return Object.fromEntries(Object.entries(font).map(([k, v]) => [k, Math.round(v * scale * 10) / 10])) as Font;
 }
 export const size = {
+  /** A border or a rule. */
+  hairline: 1,
   dot: 9,
   spinner: 13,
+  spinnerCore: 5,
+  /** The value between a stepper's buttons. */
+  stepperValue: 46,
+  spinnerRing: 1.5,
   badge: 18,
   control: 28,
   iconButtonW: 26,
@@ -108,9 +128,24 @@ export const size = {
   stripDots: 14,
   /** Space either side of a column's cards. */
   gutter: 14,
+  /** A folded column: the row height of one dot, the "+n" line, the name's length range, and room kept under it. */
+  stripDotRow: 15,
+  stripMore: 16,
+  stripLabelMin: 40,
+  stripLabelMax: 260,
+  stripLabelRoom: 30,
+  /** The rotated name's box height. */
+  stripLabelHeight: 26,
+  /** A column's fade under its header. */
+  columnFade: 20,
+  /** The color picker's heading row, and the right edge of the footnote over a chat (clear of the send button). */
+  pickerLabel: 22,
+  footnoteRight: 130,
+  popoverPad: 4,
+  /** A card menu rule: its line plus the space above and below. */
+  menuRule: 9,
 } as const;
 export const motion = { fast: 120, base: 200, shake: 320, settle: 150 } as const;
-export const FONT_SCALE = { min: 0.8, max: 1.5, step: 0.1 } as const;
 
 export type SessionColor = { id: string; hex: string; auto: boolean };
 

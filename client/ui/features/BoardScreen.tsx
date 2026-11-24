@@ -12,7 +12,7 @@ import { useAssignColors } from "../../state/useColors";
 import { usePersistence } from "../../state/usePersistence";
 import { Segmented } from "../atoms";
 import { FontScaleProvider, TokensProvider, usePalette } from "../tokens";
-import { SESSION_COLORS, font, size, tint } from "../tokens/tokens";
+import { SESSION_COLORS, font, size, space, tint } from "../tokens/tokens";
 import { Column } from "./Column";
 import { ViewOptions } from "./ViewOptions";
 
@@ -20,6 +20,9 @@ const GROUPINGS = [
   { value: "workspace", label: "Workspaces" },
   { value: "status", label: "Status" },
 ] as const;
+
+/** Space above and below the columns. */
+const BOARD_PAD_Y = space.lg;
 
 function Board({ openChat }: { openChat?: (agentId: string) => void }) {
   const p = usePalette();
@@ -63,12 +66,12 @@ function Board({ openChat }: { openChat?: (agentId: string) => void }) {
   const saveError = persist.def.saveError ?? persist.sessions.saveError;
 
   const [boardHeight, setBoardHeight] = useState(0);
-  const columnHeight = Math.max(0, boardHeight - 24);
+  const columnHeight = Math.max(0, boardHeight - 2 * BOARD_PAD_Y);
   return (
     <View style={{ flex: 1, backgroundColor: p.bg }}>
       {/* Three equal-weight zones keep the grouping switch in the middle, whatever sits either side. */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: p.border }}>
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: space.mid, paddingHorizontal: space.pad, paddingVertical: space.mid, borderBottomWidth: size.hairline, borderBottomColor: p.border }}>
+        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: space.mid }}>
           {readOnly && <Text style={{ color: p.question, fontSize: font.sm }}>Saved layout is from a newer version: changes are not saved.</Text>}
           {saveError && <Text style={{ color: p.error, fontSize: font.sm }}>Could not save: {saveError}</Text>}
         </View>
@@ -77,7 +80,7 @@ function Board({ openChat }: { openChat?: (agentId: string) => void }) {
         ) : (
           <Segmented label="Columns by" options={GROUPINGS} value={grouping} onChange={(g) => setGrouping(store, g)} />
         )}
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
+        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: space.md }}>
           <ViewOptions
             columnWidth={columnWidth}
             fontScale={fontScale}
@@ -87,14 +90,14 @@ function Board({ openChat }: { openChat?: (agentId: string) => void }) {
         </View>
       </View>
       {status && (
-        <View style={{ paddingHorizontal: 14, paddingVertical: 6, backgroundColor: status.error ? tint(p.error, 0.12) : undefined }}>
+        <View style={{ paddingHorizontal: space.pad, paddingVertical: space.run, backgroundColor: status.error ? tint(p.error, 0.12) : undefined }}>
           <Text style={{ color: status.error ? p.error : p.muted, fontSize: status.error ? font.sm : font.md }}>{status.text}</Text>
         </View>
       )}
       <View style={{ flex: 1, minWidth: 0 }} onLayout={(e) => setBoardHeight(e.nativeEvent.layout.height)}>
         {layout && data.loaded && ready && (
           <FontScaleProvider scale={fontScale}>
-            <ScrollView horizontal style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16 - size.gutter, paddingVertical: 12, alignItems: "flex-start" }}>
+            <ScrollView horizontal style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: space.xl - size.gutter, paddingVertical: BOARD_PAD_Y, alignItems: "flex-start" }}>
               {layout.columns.map((column) => (
                 <Column
                   key={column.id}

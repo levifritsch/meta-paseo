@@ -9,15 +9,15 @@ import type { CardExtras } from "../../data/card-map";
 import { Dot, IconButton } from "../atoms";
 import { ColorPicker, ErrorBox, MenuButton, usePopover, type Anchor, type MenuRow } from "../molecules";
 import { useFont, usePalette } from "../tokens/context";
-import { SESSION_COLORS, innerGlow, radius, size, stateColor, tint } from "../tokens/tokens";
+import { SESSION_COLORS, innerGlow, leading, radius, share, size, space, stateColor, tint } from "../tokens/tokens";
 import { ageLabel, compactMeta, contextPercent, joinMeta } from "./card-view";
 import { ChatToggle, MetaTags, TitleLink } from "./card-parts";
 import { ChatView } from "./ChatView";
 
 const WAITING = new Set<CardModel["state"]>(["needs", "permission"]);
 /** The full card's bottom corners sit concentric with the message box and the round send button. */
-const CORNER_LEFT = radius.field + size.composerInset + 1;
-const CORNER_RIGHT = size.input / 2 + size.composerInset + 1;
+const CORNER_LEFT = radius.field + size.composerInset + size.hairline;
+const CORNER_RIGHT = size.input / 2 + size.composerInset + size.hairline;
 
 export type CardProps = {
   card: CardModel;
@@ -82,26 +82,26 @@ export function Card(props: CardProps) {
           ...({ cursor: "nesw-resize" } as object),
           flexDirection: "row",
           alignItems: "center",
-          gap: 11,
-          paddingVertical: 12,
-          paddingLeft: 14,
-          paddingRight: 8,
+          gap: space.cozy,
+          paddingVertical: space.lg,
+          paddingLeft: space.pad,
+          paddingRight: space.md,
           borderRadius: radius.card,
-          borderWidth: 1,
+          borderWidth: size.hairline,
           borderColor: outline,
           boxShadow: innerGlow(outline),
           backgroundColor: pressed ? tint(outline, 0.08) : p.card,
         })}
       >
         {status}
-        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+        <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
           <TitleLink title={card.title} lines={1} onOpen={open} style={{ fontSize: f.lg, fontWeight: "600" }} />
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, minWidth: 0 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: space.run, minWidth: 0 }}>
             <Text numberOfLines={1} style={{ color: p.muted, fontSize: f.sm, flexShrink: 1, overflow: "hidden" }}>
               {joinMeta(props.workspaceName, compactMeta(card.state, ago))}
             </Text>
             <View style={{ flex: 1 }} />
-            <View style={{ maxWidth: "45%", flexShrink: 0 }}>
+            <View style={{ maxWidth: share.meta, flexShrink: 0 }}>
               <MetaTags {...tags} />
             </View>
           </View>
@@ -118,16 +118,16 @@ export function Card(props: CardProps) {
         borderRadius: radius.card,
         borderBottomLeftRadius: CORNER_LEFT,
         borderBottomRightRadius: CORNER_RIGHT,
-        borderWidth: 1,
+        borderWidth: size.hairline,
         borderColor: outline,
         backgroundColor: p.card,
         overflow: "hidden",
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, paddingTop: 14, paddingLeft: 16, paddingRight: 10 }}>
-        <View style={{ marginTop: running ? 4 : 6 }}>{status}</View>
-        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-          <TitleLink title={card.title} lines={2} onOpen={open} style={{ fontSize: f.title, fontWeight: "700", lineHeight: f.title * 1.3 }} />
+      <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.mid, paddingTop: space.pad, paddingLeft: space.xl, paddingRight: space.mid }}>
+        <View style={{ marginTop: running ? space.sm : space.run }}>{status}</View>
+        <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+          <TitleLink title={card.title} lines={2} onOpen={open} style={{ fontSize: f.title, fontWeight: "700", lineHeight: f.title * leading.title }} />
           <Text numberOfLines={1} style={{ color: p.muted, fontSize: f.sm, overflow: "hidden" }}>
             {joinMeta(props.workspaceName, ago)}
           </Text>
