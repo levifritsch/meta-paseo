@@ -126,3 +126,21 @@ describe("workspaces", () => {
     ]);
   });
 });
+
+describe("card extras: context use and error", () => {
+  const extras = (over: Record<string, unknown>) => mapBoard([agent(over)], ws).extras["a1"]!;
+  it("context use is used over max, clamped to 0..1", () => {
+    expect(extras({ lastUsage: { contextWindowUsedTokens: 50, contextWindowMaxTokens: 200 } }).contextUse).toBe(0.25);
+    expect(extras({ lastUsage: { contextWindowUsedTokens: 500, contextWindowMaxTokens: 200 } }).contextUse).toBe(1);
+  });
+  it("context use is absent without a usable window", () => {
+    expect(extras({}).contextUse).toBeUndefined();
+    expect(extras({ lastUsage: { contextWindowUsedTokens: 5 } }).contextUse).toBeUndefined();
+    expect(extras({ lastUsage: { contextWindowUsedTokens: 5, contextWindowMaxTokens: 0 } }).contextUse).toBeUndefined();
+  });
+  it("carries the last error, trimmed, and drops a blank one", () => {
+    expect(extras({ lastError: "  boom " }).error).toBe("boom");
+    expect(extras({ lastError: "  " }).error).toBeUndefined();
+    expect(extras({ lastError: null }).error).toBeUndefined();
+  });
+});

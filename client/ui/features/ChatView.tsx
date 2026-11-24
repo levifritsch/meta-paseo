@@ -11,8 +11,11 @@ import { usePalette } from "../tokens/context";
 import { font, radius, space } from "../tokens/tokens";
 import { RequestPanel } from "./requests";
 
-/** A session's chat: the last turns, live, with Show earlier, the oldest request, and a composer. */
-export function ChatView({ agentId }: { agentId: string }) {
+/**
+ * A session's chat: the last turns, live, with Show earlier, the oldest request, and a composer.
+ * `hideChat` folds the turns away and keeps the request and composer (the card's Show chat link).
+ */
+export function ChatView({ agentId, hideChat = false }: { agentId: string; hideChat?: boolean }) {
   const p = usePalette();
   const chat = useAgentChat(agentId);
   const scroll = useFollowScroll();
@@ -68,7 +71,8 @@ export function ChatView({ agentId }: { agentId: string }) {
     });
 
   return (
-    <View style={{ flex: 1, backgroundColor: p.card, borderRadius: radius.md, borderWidth: 1, borderColor: p.border, overflow: "hidden" }}>
+    <View style={{ flex: hideChat ? undefined : 1, backgroundColor: p.card, borderRadius: radius.md, borderWidth: 1, borderColor: p.border, overflow: "hidden" }}>
+      {!hideChat && (
       <View style={{ flex: 1 }}>
         <ScrollView {...scroll.scrollProps} contentContainerStyle={{ padding: space.lg, gap: space.xxl }}>
           {chat.hasOlder && (
@@ -91,7 +95,8 @@ export function ChatView({ agentId }: { agentId: string }) {
           </View>
         )}
       </View>
-      <View style={{ padding: space.lg, gap: space.md, borderTopWidth: 1, borderTopColor: p.border }}>
+      )}
+      <View style={{ padding: space.lg, gap: space.md, borderTopWidth: hideChat ? 0 : 1, borderTopColor: p.border }}>
         {request && (
           <RequestPanel
             key={request.id}

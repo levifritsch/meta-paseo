@@ -57,8 +57,10 @@ Each stage ends with tests where the logic is pure, and a manual check in Paseo 
 - Failed: the same card with an alert dot and the error at the end.
 - Outline in the session color. Menu: open chat, change color, expand or collapse, copy ID, archive. Sub-agent and background-task counts.
 - A running compact card shows what it is doing, live. Decide the cost first: one small timeline subscription per running card. Fall back to the state label if it is too heavy.
-- Status: not started.
-- Limits: the host caps a page at 200, so the first load follows `nextCursor` through every page. A snapshot after a reconnect carries only the first page; with over 200 sessions it would drop the rest until reload. Not yet handled: a session that finished with a question open (see open question 6).
+- Status: built, not yet checked in Paseo. `features/Card.tsx` is one component: `expanded` (the engine's call, passed in) picks compact or full, and `failed` adds the error strip. Outline in the session color; menu (`molecules/Menu.tsx`): open chat (hidden when the host gives no `navigation`), change color (swatches), expand or collapse, copy ID, archive. `ChatView` takes `hideChat`: while a question or permission waits, the card shows the request and message box with a Show chat link. `card-map` extras gained `contextUse` and `error` (`lastUsage`, `lastError`); `card-view.ts` holds the age, context and helper-count text (tested); the store gained `setColor`. The data check screen lists every card, with a hand expand toggle until 4b.4 supplies it.
+- Not done: the live activity line on a compact running card (open question 5). The compact card shows its state label for now; the timeline-subscription cost is unmeasured. Card text does not scale yet (4b.4's `useFont`).
+- Check in Paseo (data check screen, reload the plugin): outlines match the stored colors; Change color updates the outline and survives closing the screen; Expand shows the chat, and a waiting card shows Show chat; a failed card shows its error; Copy ID and Archive work (Archive removes the card); Open chat navigates.
+- Not tested: whether `lastUsage.contextWindow*` and `lastError` arrive on the list snapshot, or only on a full agent fetch (the context figure and the error text would then be missing); whether the Menu panel clips inside a scrolling column (4b.4).
 
 **4b.4 Board and columns.**
 - A hook runs `board()` on each snapshot, passing the previous layout from the store.

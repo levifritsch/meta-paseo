@@ -104,6 +104,10 @@ export function editSessions(store: BoardStore, edit: (sessions: BoardSessions) 
 export const setView = (store: BoardStore, view: Partial<BoardView>) =>
   editDef(store, (d) => (Object.entries(view).every(([k, v]) => d.view[k as keyof BoardView] === v) ? d : { ...d, view: { ...d.view, ...view } }));
 
+/** Pick a session's color by hand. Refused while the record is read-only. */
+export const setColor = (store: BoardStore, id: string, colorId: string) =>
+  editSessions(store, (x) => (x.colors[id] === colorId ? x : { ...x, colors: { ...x.colors, [id]: colorId } }));
+
 /** Hand-collapse a card, or clear it (`null`). Keyed by session (invariant 10). */
 export const setCollapse = (store: BoardStore, id: string, collapse: Collapse | null) =>
   editSessions(store, (x) => {

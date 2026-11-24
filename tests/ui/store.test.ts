@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { BY_STATUS } from "../../shared/core";
-import { createBoardStore, editSessions, setCollapse, setDef, setExpanded, setFocus, setSessions, setView } from "../../client/state/store";
+import { BY_STATUS, EMPTY_SESSIONS } from "../../shared/core";
+import { createBoardStore, editSessions, setCollapse, setColor, setDef, setExpanded, setFocus, setSessions, setView } from "../../client/state/store";
 
 const ready = (store: ReturnType<typeof createBoardStore>) => {
   setDef(store, { value: BY_STATUS, ready: true, ok: true });
@@ -72,5 +72,23 @@ describe("store: ephemeral slice", () => {
     const two = createBoardStore();
     setFocus(one, "a");
     expect(two.get().ephemeral.focus).toBeNull();
+  });
+});
+
+describe("setColor", () => {
+  it("sets a session color once the sessions record is writable, and is a no-op for the same color", () => {
+    const store = createBoardStore();
+    setSessions(store, { value: EMPTY_SESSIONS, ready: true, ok: true });
+    setColor(store, "a1", "teal");
+    expect(store.get().persisted.sessions.value.colors).toEqual({ a1: "teal" });
+    const before = store.get();
+    setColor(store, "a1", "teal");
+    expect(store.get()).toBe(before);
+  });
+  it("is refused while the record is read-only", () => {
+    const store = createBoardStore();
+    setSessions(store, { value: EMPTY_SESSIONS, ready: true, ok: false, original: { version: 9 } });
+    setColor(store, "a1", "teal");
+    expect(store.get().persisted.sessions.value.colors).toEqual({});
   });
 });

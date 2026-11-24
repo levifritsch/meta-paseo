@@ -3,14 +3,17 @@ import type { PluginScreenProps } from "@getpaseo/plugin/client";
 import { ScrollView } from "@getpaseo/plugin/client/ui";
 import { Text, View } from "react-native";
 import { useBoardData } from "../../data/useBoardData";
-import { setCollapse, setView } from "../../state/store";
+import { useState } from "react";
+import { setCollapse, setColor, setView } from "../../state/store";
 import { useBoardStore, useStoreSelector } from "../../state/StoreContext";
 import { usePersistence } from "../../state/usePersistence";
 import { useAssignColors } from "../../state/useColors";
 import { Btn } from "../atoms";
+import { Card } from "../features/Card";
 import { SESSION_COLORS, TokensProvider, font, space, usePalette } from "../tokens";
 
-function Data() {
+function Data({ openChat }: { openChat?: (agentId: string) => void }) {
+  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
   const p = usePalette();
   const d = useBoardData();
   const store = useBoardStore();
@@ -62,6 +65,23 @@ function Data() {
           );
         })}
       </View>
+      <Text style={[line, { fontWeight: "700" }]}>Cards (4b.3): expand and collapse by hand; the engine decides this in 4b.4</Text>
+      <View style={{ gap: space.lg, maxWidth: saved.def.value.view.columnWidth }}>
+        {d.cards.map((c) => (
+          <Card
+            key={c.id}
+            card={c}
+            extras={d.extras[c.id]}
+            workspaceName={ws.get(c.workspace)}
+            now={d.now}
+            expanded={open.has(c.id)}
+            colorId={saved.sessions.value.colors[c.id]}
+            onToggleExpanded={() => setOpen((s) => { const n = new Set(s); if (!n.delete(c.id)) n.add(c.id); return n; })}
+            onChangeColor={(colorId) => setColor(store, c.id, colorId)}
+            onOpenChat={openChat && (() => openChat(c.id))}
+          />
+        ))}
+      </View>
       <Text style={[line, { fontWeight: "700" }]}>Hidden</Text>
       {d.hidden.map((h) => (
         <Text key={h.id} style={line}>
@@ -72,10 +92,10 @@ function Data() {
   );
 }
 
-export function DataCheck({ theme }: PluginScreenProps) {
+export function DataCheck({ theme, navigation }: PluginScreenProps) {
   return (
     <TokensProvider theme={theme}>
-      <Data />
+      <Data openChat={navigation?.openAgent && ((agentId) => navigation.openAgent({ agentId }))} />
     </TokensProvider>
   );
 }

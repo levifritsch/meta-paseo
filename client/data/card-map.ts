@@ -11,7 +11,24 @@ export type HiddenKind = "sub-agent" | "background" | "internal";
 /** A session that gets no card. Kept so step 5's queue can show its requests under the parent. */
 export type HiddenSession = { id: string; kind: HiddenKind; parentId: string | null; requests: PaseoAgent["pendingPermissions"] };
 
-export type CardExtras = { subAgents: number; backgroundTasks: number; createdAt: number };
+export type CardExtras = {
+  subAgents: number;
+  backgroundTasks: number;
+  createdAt: number;
+  /** Share of the context window in use, 0 to 1. Absent when the provider reports no window. */
+  contextUse?: number;
+  /** The session's last error text, when it has one. */
+  error?: string;
+};
+
+/** Used tokens over the window, clamped to 0..1. Absent unless both numbers are real and the window is positive. */
+export function contextUse(agent: PaseoAgent): number | undefined {
+  const u = (agent as { lastUsage?: { contextWindowUsedTokens?: number; contextWindowMaxTokens?: number } }).lastUsage;
+  const used = u?.contextWindowUsedTokens;
+  const max = u?.contextWindowMaxTokens;
+  if (typeof used !== "number" || typeof max !== "number" || !Number.isFinite(used) || !Number.isFinite(max) || max <= 0) return undefined;
+  return Math.min(1, Math.max(0, used / max));
+}
 
 export type MappedBoard = {
   cards: Card[];
@@ -90,7 +107,8 @@ export function mapBoard(agents: readonly PaseoAgent[], workspaces: readonly Pas
       waitingSince: WAITING.has(state) ? (time(a.attentionTimestamp) ?? lastActivity) : undefined,
       hasSubAgents: subAgents + backgroundTasks > 0,
     });
-    extras[a.id] = { subAgents, backgroundTasks, createdAt: time(a.createdAt) ?? lastActivity };
+    const error = (a as { lastError?: string | null }).lastError?.trim();
+    extras[a.id] = { subAgents, backgroundTasks, createdAt: time(a.createdAt) ?? lastActivity, contextUse: contextUse(a), error: error || undefined };
   }
   return { cards, extras, hidden };
 }
