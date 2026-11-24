@@ -16,7 +16,7 @@ const cardsArb = fc.uniqueArray(
 const defArb = fc.constantFrom<BoardDef>(BY_WORKSPACE, BY_STATUS);
 
 /** Two passes: a cold layout, then a re-run over mutated cards using the first as `prev`. */
-const runs = fc.tuple(defArb, cardsArb, fc.array(fc.constantFrom(...CARD_STATES), { maxLength: 30 }), fc.nat(40));
+const runs = fc.tuple(defArb, cardsArb, fc.array(fc.constantFrom(...CARD_STATES), { maxLength: 30 }));
 
 function check(layout: Layout, cards: Card[]) {
   const all = layout.columns.flatMap((c) => c.sections.flatMap((s) => s.cards.map((p) => ({ p, sec: s }))));
@@ -35,14 +35,13 @@ function check(layout: Layout, cards: Card[]) {
 }
 
 describe("board properties", () => {
-  it("holds invariants 1, 2 and 6 cold and after updates, with any focus", () => {
+  it("holds invariants 1, 2 and 6 cold and after updates", () => {
     fc.assert(
-      fc.property(runs, ([def, cards, nextStates, focusAt]) => {
+      fc.property(runs, ([def, cards, nextStates]) => {
         const cold = board(def, null, snap(cards));
         check(cold.layout, cards);
         const mutated = cards.map((c, i) => ({ ...c, state: nextStates[i % Math.max(nextStates.length, 1)] ?? c.state }));
-        const focus = mutated[focusAt % Math.max(mutated.length, 1)]?.id ?? null;
-        const warm = board(def, cold.layout, snap(mutated, { focus }));
+        const warm = board(def, cold.layout, snap(mutated));
         check(warm.layout, mutated);
       }),
     );

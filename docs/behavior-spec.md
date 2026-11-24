@@ -26,12 +26,14 @@ Vocabulary: **state** is `needs` (question), `permission`, `running`, `done`, `f
 - **M3.** Collapsing a `failed` card marks it dealt with: it leaves the queue and drops below the expanded cards.
 - **M4.** A failed session stays queued until it acts again or is collapsed.
 
-## Focus pinning
+## Focus (pinning dropped)
 
-- **F1.** A card with focus inside it keeps its column and place when its state changes. Its dot and outline update at once.
-- **F2.** It moves when focus leaves or when you send to it.
-- **F3.** A pinned card that starts waiting on a permission still expands (S2 beats F1 for size). Found by the property test.
-- **F4.** Pinning holds a card's size only against automatic change. A hand collapse or expand applies at once, even though clicking the toggle puts focus in the card. Found live in Paseo: the toggle did nothing until you clicked elsewhere.
+Pinning a focused card was tried (F1 to F4) and dropped: a card that cannot move leaves the board out of date under the user. A card with focus now moves like any other, and the UI follows it.
+
+- **F1.** A card with focus moves freely. *Following is switched off for now* (`FOLLOW_FOCUS` in `Column.tsx`); the rest of this line is the behavior when it is on. The column scrolls to it if its move took it out of view, and the board scrolls to its column if it changed column. (UI only: the engine does not know about focus.)
+- **F2.** *Dropped.* Sending released the pin.
+- **F3.** *Dropped.* S2 holds on its own now that nothing pins a size.
+- **F4.** *Dropped.* A hand collapse or expand always applies at once now.
 
 ## Columns
 

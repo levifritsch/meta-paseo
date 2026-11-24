@@ -12,10 +12,15 @@ import { STATE_SHAPE, font, icon, motion, radius, size, space, stateColor, tint 
 import { Card } from "./Card";
 import { columnCounts } from "./column-view";
 
+/** Off for now: scroll to follow a card with focus when it moves (F1). Opening a card still scrolls to it. */
+export const FOLLOW_FOCUS = false;
+
 export type ColumnProps = {
   column: LayoutColumn;
   width: number;
   height: number;
+  /** The card with focus, which the column follows when it moves (F1). */
+  focus: string | null;
   cards: ReadonlyMap<string, CardModel>;
   states: Readonly<Record<string, CardState>>;
   extras: Readonly<Record<string, CardExtras>>;
@@ -88,23 +93,47 @@ export function Column(props: ColumnProps) {
   const p = usePalette();
   const f = useFont();
   const { column } = props;
-  // A card you open lands at the bottom of its section's expanded stack (S5): scroll to it once
-  // the cards around it have glided into place, since a card mid-slide measures off its spot.
+  // The column follows a card in two cases, once the cards around it have glided into place (a card
+  // mid-slide measures off its spot): a card you open scrolls to the top (S5), and a card with focus
+  // that moved scrolls only if it left the view (F1).
   const scroller = useRef<NativeScrollView | null>(null);
   const content = useRef<View | null>(null);
   const cardViews = useRef(new Map<string, View>());
   const reveal = useRef<string | null>(null);
+  const prevOrder = useRef(new Map<string, number>());
+  const scrollY = useRef(0);
+  const viewHeight = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   useEffect(() => {
-    const id = reveal.current;
-    if (!id || !column.sections.some((s) => s.cards.some((c) => c.id === id && c.expanded))) return;
-    reveal.current = null;
+    const order = column.sections.flatMap((s) => s.cards);
+    const before = prevOrder.current;
+    prevOrder.current = new Map(order.map((c, i) => [c.id, i]));
+    let target: { id: string; always: boolean } | null = null;
+    const opened = reveal.current;
+    if (opened) {
+      // Wait until the engine has opened it.
+      if (!order.some((c) => c.id === opened && c.expanded)) return;
+      reveal.current = null;
+      target = { id: opened, always: true };
+    } else if (FOLLOW_FOCUS && props.focus && before.size > 0 && prevOrder.current.has(props.focus) && before.get(props.focus) !== prevOrder.current.get(props.focus)) {
+      target = { id: props.focus, always: false };
+    }
+    if (!target) return;
+    const { id, always } = target;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       const view = cardViews.current.get(id);
       if (!view || !content.current) return;
-      view.measureLayout(content.current, (_x, y) => scroller.current?.scrollTo({ y: Math.max(0, y + space.mid - size.columnFade), animated: true }), () => {});
+      view.measureLayout(
+        content.current,
+        (_x, y, _w, h) => {
+          const top = y + space.mid;
+          const hidden = top < scrollY.current + size.columnFade || top + h > scrollY.current + viewHeight.current;
+          if (always || hidden) scroller.current?.scrollTo({ y: Math.max(0, top - size.columnFade), animated: true });
+        },
+        () => {},
+      );
     }, motion.base + motion.settle);
   }, [column]);
   if (column.folded) return <FoldedColumn column={column} height={props.height} states={props.states} onPress={props.onToggleFold} />;
@@ -127,7 +156,7 @@ export function Column(props: ColumnProps) {
         </View>
       </FontScaleProvider>
       <View style={{ flex: 1, minHeight: 0 }}>
-        <ScrollView ref={scroller} style={{ flex: 1 }} contentContainerStyle={{ paddingTop: space.mid, paddingBottom: space.xl, paddingHorizontal: size.gutter }}>
+        <ScrollView ref={scroller} style={{ flex: 1 }} scrollEventThrottle={64} onScroll={(e) => { scrollY.current = e.nativeEvent.contentOffset.y; }} onLayout={(e) => { viewHeight.current = e.nativeEvent.layout.height; }} contentContainerStyle={{ paddingTop: space.mid, paddingBottom: space.xl, paddingHorizontal: size.gutter }}>
           <View ref={content} collapsable={false} style={{ gap: space.lg }}>
           {column.count === 0 ? <Text style={{ color: p.muted, fontSize: f.sm, paddingHorizontal: space.pad, paddingTop: space.mid }}>No sessions here.</Text> : null}
           {sections.map((s) => (
@@ -153,8 +182,6 @@ export function Column(props: ColumnProps) {
                           props.onToggleExpanded(card, expanded);
                         }}
                         onChangeColor={(colorId) => props.onChangeColor(id, colorId)}
-                        // Sending releases the card's focus pin so it can move (F2).
-                        onSent={() => props.onFocusChange(id, false)}
                         onOpenChat={props.onOpenChat && (() => props.onOpenChat?.(id))}
                       />
                     </FocusScope>

@@ -86,39 +86,3 @@ describe("collapse memory", () => {
     expect(col(r, "needs")).toEqual(["g", "f"]);
   });
 });
-
-describe("focus", () => {
-  it("keeps a focused card's column and place when its state changes (F1, F2)", () => {
-    const a = card("a", { state: "done" });
-    const first = board(BY_STATUS, null, snap([a]));
-    const moved = { ...a, state: "running" as const };
-    const pinned = board(BY_STATUS, first.layout, snap([moved], { focus: "a" }));
-    expect(col(pinned, "done")).toEqual(["a"]);
-    expect(col(pinned, "running")).toEqual([]);
-    const released = board(BY_STATUS, pinned.layout, snap([moved], { focus: null }));
-    expect(col(released, "done")).toEqual([]);
-    expect(col(released, "running")).toEqual(["a"]);
-  });
-  const sizeOf = (r: ReturnType<typeof board>, id: string) =>
-    r.layout.columns.flatMap((c) => c.sections.flatMap((s) => s.cards)).find((c) => c.id === id)?.expanded;
-  it("applies a hand collapse or expand at once, while the card still has focus (F4)", () => {
-    const a = card("a", { state: "done" });
-    const first = board(BY_STATUS, null, snap([a], { focus: "a" }));
-    expect(sizeOf(first, "a")).toBe(true);
-    const collapsed = board(BY_STATUS, first.layout, snap([a], { focus: "a", collapsed: { a: { state: "done", activity: a.lastActivity } } }));
-    expect(sizeOf(collapsed, "a")).toBe(false);
-    const reopened = board(BY_STATUS, collapsed.layout, snap([a], { focus: "a", expanded: new Set(["a"]) }));
-    expect(sizeOf(reopened, "a")).toBe(true);
-    const r = card("r");
-    const compact = board(BY_STATUS, null, snap([r], { focus: "r" }));
-    expect(sizeOf(compact, "r")).toBe(false);
-    const opened = board(BY_STATUS, compact.layout, snap([r], { focus: "r", expanded: new Set(["r"]) }));
-    expect(sizeOf(opened, "r")).toBe(true);
-  });
-  it("still pins size against an automatic change (F1)", () => {
-    const r = card("r");
-    const first = board(BY_STATUS, null, snap([r], { focus: "r" }));
-    const done = { ...r, state: "done" as const };
-    expect(sizeOf(board(BY_STATUS, first.layout, snap([done], { focus: "r" })), "r")).toBe(false);
-  });
-});

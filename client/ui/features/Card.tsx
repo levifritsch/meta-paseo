@@ -31,8 +31,6 @@ export type CardProps = {
   colorId?: string;
   onToggleExpanded: () => void;
   onChangeColor: (colorId: string) => void;
-  /** A message to this session went through. */
-  onSent?: () => void;
   /** Absent on a host with no navigation: the open-chat actions hide. */
   onOpenChat?: () => void;
 };
@@ -147,7 +145,6 @@ export function Card(props: CardProps) {
         agentId={card.id}
         hideChat={!chatOpen}
         chatHeight={size.chat}
-        onSent={props.onSent}
         color={props.colorId ? outline : undefined}
         trailing={failed && extras?.error ? <ErrorBox text={extras.error} /> : null}
         footnote={waiting ? null : <MetaTags {...tags} over />}

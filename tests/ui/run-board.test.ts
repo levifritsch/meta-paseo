@@ -9,13 +9,13 @@ const ids = (r: ReturnType<typeof runBoard>, col: string) => r.layout.columns.fi
 
 describe("runBoard", () => {
   it("places cards by status", () => {
-    const r = runBoard(BY_STATUS, null, data([card("a"), card("b", { state: "running" })]), EMPTY_SESSIONS, null, new Set());
+    const r = runBoard(BY_STATUS, null, data([card("a"), card("b", { state: "running" })]), EMPTY_SESSIONS, new Set());
     expect(ids(r, "done")).toEqual(["a"]);
     expect(ids(r, "running")).toEqual(["b"]);
   });
   it("a hand-collapsed card is compact, and a hand-expanded running card is expanded", () => {
     const sessions = { ...EMPTY_SESSIONS, collapsed: { a: { state: "done" as const, activity: 1 } } };
-    const r = runBoard(BY_STATUS, null, data([card("a"), card("b", { state: "running" })]), sessions, null, new Set(["b"]));
+    const r = runBoard(BY_STATUS, null, data([card("a"), card("b", { state: "running" })]), sessions, new Set(["b"]));
     const open = (id: string, col: string) => r.layout.columns.find((c) => c.id === col)!.sections[0]!.cards.find((c) => c.id === id)!.expanded;
     expect(open("a", "done")).toBe(false);
     expect(open("b", "running")).toBe(true);
@@ -23,12 +23,7 @@ describe("runBoard", () => {
   it("feeds the stored color to the color sort", () => {
     const def = { ...BY_STATUS, sort: [{ by: "color" as const, dir: "asc" as const }] };
     const sessions = { ...EMPTY_SESSIONS, colors: { a: "teal", b: "amber" } };
-    expect(ids(runBoard(def, null, data([card("a"), card("b")]), sessions, null, new Set()), "done")).toEqual(["b", "a"]);
-  });
-  it("focus pins a card while the others rearrange", () => {
-    const first = runBoard(BY_STATUS, null, data([card("a", { lastActivity: 2 }), card("b", { lastActivity: 1 })]), EMPTY_SESSIONS, null, new Set());
-    const second = runBoard(BY_STATUS, first.layout, data([card("a", { lastActivity: 2 }), card("b", { lastActivity: 9 })]), EMPTY_SESSIONS, "a", new Set());
-    expect(ids(second, "done")).toEqual(["a", "b"]);
+    expect(ids(runBoard(def, null, data([card("a"), card("b")]), sessions, new Set()), "done")).toEqual(["b", "a"]);
   });
 });
 

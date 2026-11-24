@@ -8,14 +8,13 @@ import { useStoreSelector } from "./StoreContext";
 export function useBoard(store: BoardStore, data: BoardInputs) {
   const def = useStoreSelector((s) => s.persisted.def.value);
   const sessions = useStoreSelector((s) => s.persisted.sessions.value);
-  const focus = useStoreSelector((s) => s.ephemeral.focus);
   const expanded = useStoreSelector((s) => s.ephemeral.expanded);
   const { cards, now } = data;
   const { loaded, list } = data.workspaces;
   const result = useMemo(
     // The previous layout is read, not watched: it changes as a result of this run.
-    () => runBoard(def, store.get().ephemeral.layout, { cards, workspaces: { loaded, list }, now }, sessions, focus, expanded),
-    [store, def, sessions, focus, expanded, cards, loaded, list, now],
+    () => runBoard(def, store.get().ephemeral.layout, { cards, workspaces: { loaded, list }, now }, sessions, expanded),
+    [store, def, sessions, expanded, cards, loaded, list, now],
   );
   useEffect(() => {
     setLayout(store, result.layout);

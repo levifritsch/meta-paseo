@@ -65,7 +65,7 @@ Fixed, and guarded by tests. Derived from `OVERVIEW.md`, not yet verified agains
 
 1. Every card is in exactly one column.
 2. A card waiting on a permission is always expanded.
-3. A focused card keeps its column and place until focus leaves.
+3. *Superseded 2026-11-24.* A focused card keeps its column and place until focus leaves. A focused card now moves freely and the UI scrolls to follow it (F1).
 4. Errored sessions stay queued until they act again or are collapsed.
 5. No shake on first load or on config changes.
 6. Expanded cards precede compact ones within a section.

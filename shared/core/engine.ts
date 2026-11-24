@@ -30,12 +30,6 @@ function isCollapsed(card: Card, snap: Snapshot): boolean {
   return !SETTLES.has(card.state) || card.lastActivity <= c.activity;
 }
 
-/** The size the user chose by hand, if any. */
-function handSize(card: Card, snap: Snapshot): boolean | undefined {
-  if (isCollapsed(card, snap)) return false;
-  return snap.expanded.has(card.id) ? true : undefined;
-}
-
 function isExpanded(card: Card, snap: Snapshot): boolean {
   if (card.state === "permission") return true; // invariant 2
   if (isCollapsed(card, snap)) return false;
@@ -117,16 +111,6 @@ export function board(def: BoardDef, prev: Layout | null, snap: Snapshot): Board
   const byColumn = new Map<string, Placed[]>();
   const other: Placed[] = [];
   for (const card of snap.cards) {
-    const at = snap.focus === card.id ? prevPos.get(card.id) : undefined;
-    const pinCol = at && colById.get(at.columnId);
-    if (at && pinCol && sectionIds(pinCol).includes(at.sectionId)) {
-      // Focus pins column, section, place and size until focus leaves (invariant 3). Size is
-      // pinned only against automatic change: a hand toggle always wins, since clicking the
-      // toggle is what puts focus in the card. A permission request still forces it open (invariant 2).
-      const byHand = card.state === "permission" ? undefined : handSize(card, snap);
-      byColumn.set(pinCol.id, [...(byColumn.get(pinCol.id) ?? []), { card, sectionId: at.sectionId, expanded: byHand ?? (at.expanded || card.state === "permission") }]);
-      continue;
-    }
     const col = columns.find((c) => matches(c.match, card, snap.now));
     const placed = { card, sectionId: col ? sectionOf(def, col, card) : "", expanded: isExpanded(card, snap) };
     if (col) byColumn.set(col.id, [...(byColumn.get(col.id) ?? []), placed]);

@@ -16,7 +16,7 @@ Paseo only builds plugin modules under `client/`, `server/` and `shared/`. `inde
 
 ## Pipeline
 
-Snapshots in, layout and events out. The board is a pure function of `(previous layout, agent/workspace snapshot, settings, focus, now)`. Clock and ids are injected.
+Snapshots in, layout and events out. The board is a pure function of `(previous layout, agent/workspace snapshot, settings, now)`. Clock and ids are injected.
 
 ## UI layers
 

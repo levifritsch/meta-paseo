@@ -12,7 +12,6 @@ export const card = (id: string, over: Partial<Card> = {}): Card => ({
 export const snap = (cards: Card[], over: Partial<Snapshot> = {}): Snapshot => ({
   cards,
   workspaces: { loaded: true, list: [{ id: "w1", name: "One" }, { id: "w2", name: "Two" }] },
-  focus: null,
   now: 1000,
   collapsed: {},
   expanded: new Set(),

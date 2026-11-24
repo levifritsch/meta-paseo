@@ -22,3 +22,5 @@ Append only. One entry per decision.
 - **2026-11-24: A collapsed card goes to the top of the compact stack; an opened card still goes to the bottom of the expanded stack** (S5). Tried the top for opened cards too and reverted it: cards jumped on automatic state changes.
 - **2026-11-24: A card shows the raw model id.** Paseo exposes no model-name catalog to the plugin client, and a name parsed from the id was fragile.
 - **2026-11-24: State is shown by symbol as well as color.** State colors are the session colors (question amber, failed red). Chosen so state reads without color and matches the palette.
+- **2026-11-24: No focus pinning; the UI follows a focused card instead.** The engine no longer takes focus. A card with focus moves like any other, and the column scrolls to it when its move took it out of view, and the board scrolls to its column on a column change. Replaces invariant 3 and F1 to F4. Pinning kept a card still while the board changed around it.
+- **2026-11-24: Following a focused card is switched off** (`FOLLOW_FOCUS = false`), pending a decision on whether to keep it. The code stays.

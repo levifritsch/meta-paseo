@@ -13,13 +13,11 @@ export function runBoard(
   prev: Layout | null,
   data: BoardInputs,
   sessions: BoardSessions,
-  focus: string | null,
   expanded: ReadonlySet<string>,
 ): BoardResult {
   return board(def, prev, {
     cards: data.cards.map((c) => ({ ...c, color: sessions.colors[c.id] ?? c.color })),
     workspaces: data.workspaces,
-    focus,
     now: data.now,
     collapsed: sessions.collapsed,
     expanded,

@@ -19,9 +19,8 @@ const CHAT_EMPHASIS = opacity.chat;
  * It has no frame of its own: a card gives it one. `hideChat` folds the turns away and keeps the
  * request and message box; `trailing` sits after the last turn; `footnote` floats over the bottom
  * fade; `color` is the card's, for the message box. The chat takes `chatHeight`, or the room there is.
- * `onSent` fires once a message has gone through.
  */
-export function ChatView({ agentId, hideChat = false, chatHeight, color, trailing, footnote, onSent }: { agentId: string; hideChat?: boolean; chatHeight?: number; color?: string; trailing?: ReactNode; footnote?: ReactNode; onSent?: () => void }) {
+export function ChatView({ agentId, hideChat = false, chatHeight, color, trailing, footnote }: { agentId: string; hideChat?: boolean; chatHeight?: number; color?: string; trailing?: ReactNode; footnote?: ReactNode }) {
   const p = usePalette();
   const f = useFont();
   const chat = useAgentChat(agentId);
@@ -51,7 +50,6 @@ export function ChatView({ agentId, hideChat = false, chatHeight, color, trailin
       () => {
         setDraft("");
         scroll.follow();
-        onSent?.();
       },
       (e: unknown) => setSendError(e instanceof Error ? e.message : String(e)),
     );

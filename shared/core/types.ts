@@ -62,7 +62,6 @@ export type Snapshot = {
   cards: Card[];
   /** `loaded` is false until a fetch succeeds, so a failed load never prunes. */
   workspaces: { loaded: boolean; list: Workspace[] };
-  focus: string | null;
   now: number;
   collapsed: Record<string, Collapse>;
   /** Cards the user expanded by hand. */
