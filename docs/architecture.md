@@ -25,7 +25,7 @@ Snapshots in, layout and events out. The board is a pure function of `(previous 
 | Tokens | colors, spacing, type, motion, session palette | one file, no magic numbers elsewhere |
 | Atoms | Dot, Btn, Chip, Badge, Switch, Stepper, Segmented... | stateless, domain-free |
 | Behaviors | `Glide` (slide to place), `Shake`, `Reveal`, `Foldable`, `useFollowScroll`, `useDraft` | wrap children by key; know nothing of cards |
-| Molecules | Menu, CodeBlock, Composer, ChatRow, Header | compose atoms |
+| Molecules | Popover, Menu, ColorPicker, CodeBlock, Composer, ChatRow, Reply | compose atoms; anything that hangs from a button is a Popover |
 | Features | Card, Column, Queue, NewChat, QuestionForm | the only layer that knows Paseo types |
 
 The UI kit lives inside this plugin. Headless logic with thin views: scroll-follow is a hook with an explicit state machine, testable alone. One `Card` with slots and variants, not separate compact/full/failed components. A gallery page shows every atom in every state.

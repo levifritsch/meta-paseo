@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { foldCode } from "../../../shared/core";
 import { Switch } from "../atoms";
-import { usePalette } from "../tokens/context";
-import { font, radius, size, space } from "../tokens/tokens";
+import { usePalette, useFont } from "../tokens/context";
+import { radius, size, space } from "../tokens/tokens";
 
 const MONO = Platform.select({ ios: "Menlo", android: "monospace", default: "ui-monospace, Menlo, monospace" });
 
@@ -13,11 +13,12 @@ const MONO = Platform.select({ ios: "Menlo", android: "monospace", default: "ui-
  */
 export function CodeBlock({ text, wrapByDefault = false }: { text: string; wrapByDefault?: boolean }) {
   const p = usePalette();
+  const f = useFont();
   const [expanded, setExpanded] = useState(false);
   const [wrap, setWrap] = useState(wrapByDefault);
   const folded = foldCode(text, expanded);
   const body = (
-    <Text selectable style={{ color: p.text, fontFamily: MONO, fontSize: font.sm }}>
+    <Text selectable style={{ color: p.text, fontFamily: MONO, fontSize: f.sm }}>
       {folded.shown}
     </Text>
   );
@@ -30,7 +31,7 @@ export function CodeBlock({ text, wrapByDefault = false }: { text: string; wrapB
       <View style={{ flexDirection: "row", alignItems: "center", gap: space.xl }}>
         {folded.foldable && (
           <Pressable accessibilityRole="button" onPress={() => setExpanded((v) => !v)}>
-            <Text style={{ color: p.accent, fontSize: font.sm }}>
+            <Text style={{ color: p.accent, fontSize: f.sm }}>
               {expanded ? "Show less" : `Show more (${folded.hiddenLines} more lines)`}
             </Text>
           </Pressable>

@@ -21,3 +21,12 @@ export function helperSummary(subAgents: number, backgroundTasks: number): strin
   if (backgroundTasks > 0) parts.push(`${backgroundTasks} background task${backgroundTasks === 1 ? "" : "s"}`);
   return parts.length ? parts.join(" · ") : null;
 }
+
+export type StateName = "needs" | "permission" | "running" | "done" | "failed";
+export const STATE_LABEL: Record<StateName, string> = { needs: "Needs you", permission: "Permission", running: "Running", done: "Done", failed: "Error" };
+
+/** The compact card's status line: the state and how long ago, e.g. "Running · 5m". */
+export const compactMeta = (state: StateName, ago: string): string => `${STATE_LABEL[state]} · ${ago}`;
+
+/** "workspace · 5m": the full card's line under the title. Empty parts drop out. */
+export const joinMeta = (...parts: (string | null | undefined | false)[]): string => parts.filter(Boolean).join(" · ");

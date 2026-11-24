@@ -32,3 +32,17 @@ export const BY_STATUS: BoardDef = {
 };
 
 export const DEFAULT_DEF = BY_WORKSPACE;
+
+export type Grouping = "workspace" | "status";
+const PRESETS: Record<Grouping, BoardDef> = { workspace: BY_WORKSPACE, status: BY_STATUS };
+const shape = (d: BoardDef) => JSON.stringify([d.columns, d.sections, d.buckets, d.sort]);
+
+/** Which built-in view a definition is, or `custom` once the user has edited its rules. */
+export function groupingOf(def: BoardDef): Grouping | "custom" {
+  return (Object.keys(PRESETS) as Grouping[]).find((g) => shape(PRESETS[g]) === shape(def)) ?? "custom";
+}
+
+/** Switch to a built-in view. Per-client layout state and view options carry over. */
+export function withGrouping(def: BoardDef, grouping: Grouping): BoardDef {
+  return groupingOf(def) === grouping ? def : { ...PRESETS[grouping], state: def.state, view: def.view };
+}

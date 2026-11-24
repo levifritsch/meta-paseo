@@ -1,53 +1,121 @@
 // Stateless, domain-free atoms. They know tokens and nothing about cards or Paseo.
-import { Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
-import { usePalette } from "../tokens/context";
-import { font, radius, size, space, tint, toneColor, type Tone } from "../tokens/tokens";
+import { Icon } from "@getpaseo/plugin/client/ui";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Easing, Platform, Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { useFont, usePalette } from "../tokens/context";
+import { radius, size, space, tint, toneColor, type Tone } from "../tokens/tokens";
 import { canStep, stepValue } from "./stepper-math";
 
-export function Dot({ color, diameter = size.dot }: { color: string; diameter?: number }) {
+/**
+ * A status dot. `ring` (running) draws a smaller dot inside a spinning ring; `alert` (failed)
+ * swaps it for an alert symbol. Both ignore `diameter`.
+ */
+export function Dot({ color, diameter = size.dot, ring, alert }: { color: string; diameter?: number; ring?: boolean; alert?: boolean }) {
+  if (alert) return <Icon name="CircleAlert" size={size.spinner} color={color} />;
+  if (ring) return <SpinnerDot color={color} />;
   return <View style={{ width: diameter, height: diameter, borderRadius: radius.pill, backgroundColor: color }} />;
 }
 
-export type BtnVariant = "solid" | "ghost" | "danger";
+function SpinnerDot({ color }: { color: string }) {
+  const turn = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(Animated.timing(turn, { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: Platform.OS !== "web" }));
+    loop.start();
+    return () => loop.stop();
+  }, [turn]);
+  const rotate = turn.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
+  const d = size.spinner;
+  return (
+    <View style={{ width: d, height: d, alignItems: "center", justifyContent: "center" }}>
+      <Animated.View
+        style={{ position: "absolute", width: d, height: d, borderRadius: d / 2, borderWidth: 1.5, borderColor: tint(color, 0.22), borderTopColor: color, transform: [{ rotate }] }}
+      />
+      <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: color }} />
+    </View>
+  );
+}
+
+/** Hover state for web; native never fires it. */
+export function useHover() {
+  const [hovered, setHovered] = useState(false);
+  return { hovered, props: { onHoverIn: () => setHovered(true), onHoverOut: () => setHovered(false) } };
+}
+
+export type BtnVariant = "solid" | "ghost" | "danger" | "plain";
 
 export function Btn(props: {
   label: string;
   onPress: () => void;
+  /** `solid` is filled in `color` (the accent by default), `plain` is outlined, `ghost` has no frame. */
   variant?: BtnVariant;
   disabled?: boolean;
+  small?: boolean;
+  /** A Lucide icon name, shown before the label. */
+  icon?: string;
+  color?: string;
   style?: StyleProp<ViewStyle>;
 }) {
   const p = usePalette();
+  const f = useFont();
   const variant = props.variant ?? "solid";
-  const bg = variant === "solid" ? p.accent : variant === "danger" ? p.error : "transparent";
-  const fg = variant === "ghost" ? p.text : p.onAccent;
+  const fill = variant === "solid" ? (props.color ?? p.accent) : variant === "danger" ? p.error : "transparent";
+  const fg = variant === "solid" || variant === "danger" ? p.onAccent : variant === "ghost" ? p.muted : p.text;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled: props.disabled }}
       disabled={props.disabled}
       onPress={props.onPress}
-      style={[
+      style={({ pressed }) => [
         {
-          height: size.control,
-          paddingHorizontal: space.lg,
-          borderRadius: radius.md,
-          justifyContent: "center",
-          backgroundColor: bg,
-          borderWidth: variant === "ghost" ? 1 : 0,
-          borderColor: p.border,
-          opacity: props.disabled ? 0.4 : 1,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 5,
+          paddingHorizontal: props.small ? 8 : 11,
+          paddingVertical: props.small ? 3 : 6,
+          borderRadius: radius.control,
+          borderWidth: variant === "ghost" ? 0 : 1,
+          borderColor: variant === "plain" ? p.border : fill,
+          backgroundColor: fill,
+          opacity: props.disabled ? 0.45 : pressed ? 0.75 : 1,
         },
         props.style,
       ]}
     >
-      <Text style={{ color: fg, fontSize: font.sm, fontWeight: "600" }}>{props.label}</Text>
+      {props.icon ? <Icon name={props.icon} size={f.md} color={fg} /> : null}
+      <Text style={{ color: fg, fontSize: f.sm, fontWeight: variant === "solid" ? "600" : "400" }}>{props.label}</Text>
+    </Pressable>
+  );
+}
+
+/** A small square button holding one icon. */
+export function IconButton(props: { icon: string; label: string; onPress: () => void; active?: boolean; disabled?: boolean }) {
+  const p = usePalette();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={props.label}
+      disabled={props.disabled}
+      onPress={props.onPress}
+      hitSlop={4}
+      style={({ pressed }) => ({
+        width: size.iconButtonW,
+        height: size.iconButtonH,
+        borderRadius: radius.control,
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: props.disabled ? 0.4 : 1,
+        backgroundColor: props.active || pressed ? tint(p.border, 0.6) : "transparent",
+      })}
+    >
+      <Icon name={props.icon} size={15} color={p.muted} />
     </Pressable>
   );
 }
 
 export function Chip(props: { label: string; count?: number; selected?: boolean; tone?: Tone; onPress?: () => void }) {
   const p = usePalette();
+  const f = useFont();
   const color = toneColor(p, props.tone ?? "neutral");
   return (
     <Pressable
@@ -66,36 +134,28 @@ export function Chip(props: { label: string; count?: number; selected?: boolean;
         backgroundColor: props.selected ? tint(color, 0.15) : "transparent",
       }}
     >
-      <Text style={{ color: p.text, fontSize: font.sm }}>{props.label}</Text>
-      {props.count !== undefined && <Text style={{ color, fontSize: font.sm, fontWeight: "600" }}>{props.count}</Text>}
+      <Text style={{ color: p.text, fontSize: f.sm }}>{props.label}</Text>
+      {props.count !== undefined && <Text style={{ color, fontSize: f.sm, fontWeight: "600" }}>{props.count}</Text>}
     </Pressable>
   );
 }
 
-/** A count in the tone of the loudest kind. Renders nothing at zero. */
-export function Badge({ count, tone }: { count: number; tone: Tone }) {
+/** A count in a tinted pill, in a tone or any `color`. Renders nothing at zero. */
+export function Badge({ count, tone = "neutral", color }: { count: number; tone?: Tone; color?: string }) {
   const p = usePalette();
+  const f = useFont();
   if (count <= 0) return null;
+  const c = color ?? toneColor(p, tone);
   return (
-    <View
-      accessibilityLabel={`${count}`}
-      style={{
-        minWidth: size.badge,
-        height: size.badge,
-        paddingHorizontal: space.sm,
-        borderRadius: radius.pill,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: toneColor(p, tone),
-      }}
-    >
-      <Text style={{ color: p.onAccent, fontSize: font.xs, fontWeight: "700" }}>{count}</Text>
+    <View accessibilityLabel={`${count}`} style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: radius.pill, backgroundColor: tint(c, 0.16) }}>
+      <Text style={{ color: c, fontSize: f.xxs, fontWeight: "600" }}>{count}</Text>
     </View>
   );
 }
 
 export function Switch(props: { value: boolean; onValueChange: (next: boolean) => void; label: string }) {
   const p = usePalette();
+  const f = useFont();
   const w = size.control + space.md;
   const knob = size.control - space.lg;
   return (
@@ -106,32 +166,15 @@ export function Switch(props: { value: boolean; onValueChange: (next: boolean) =
       onPress={() => props.onValueChange(!props.value)}
       style={{ flexDirection: "row", alignItems: "center", gap: space.md }}
     >
-      <View
-        style={{
-          width: w,
-          height: knob + space.md,
-          borderRadius: radius.pill,
-          padding: space.sm,
-          justifyContent: "center",
-          backgroundColor: props.value ? p.accent : p.chrome,
-        }}
-      >
-        <View
-          style={{
-            width: knob,
-            height: knob,
-            borderRadius: radius.pill,
-            backgroundColor: props.value ? p.onAccent : p.muted,
-            alignSelf: props.value ? "flex-end" : "flex-start",
-          }}
-        />
+      <View style={{ width: w, height: knob + space.md, borderRadius: radius.pill, padding: space.sm, justifyContent: "center", backgroundColor: props.value ? p.accent : p.chrome }}>
+        <View style={{ width: knob, height: knob, borderRadius: radius.pill, backgroundColor: props.value ? p.onAccent : p.muted, alignSelf: props.value ? "flex-end" : "flex-start" }} />
       </View>
-      <Text style={{ color: p.text, fontSize: font.sm }}>{props.label}</Text>
+      <Text style={{ color: p.text, fontSize: f.sm }}>{props.label}</Text>
     </Pressable>
   );
 }
 
-/** − and + around a value. The caller formats it (for example 100%). */
+/** A value with small − and + buttons. */
 export function Stepper(props: {
   value: number;
   min: number;
@@ -142,70 +185,52 @@ export function Stepper(props: {
   label: string;
 }) {
   const p = usePalette();
-  const button = (dir: 1 | -1) => {
-    const enabled = canStep(props.value, dir, props.min, props.max);
-    return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`${dir === 1 ? "Increase" : "Decrease"} ${props.label}`}
-        disabled={!enabled}
-        onPress={() => props.onChange(stepValue(props.value, dir, props.min, props.max, props.step))}
-        style={{
-          width: size.control,
-          height: size.control,
-          borderRadius: radius.md,
-          alignItems: "center",
-          justifyContent: "center",
-          borderWidth: 1,
-          borderColor: p.border,
-          opacity: enabled ? 1 : 0.4,
-        }}
-      >
-        <Text style={{ color: p.text, fontSize: font.lg }}>{dir === 1 ? "+" : "−"}</Text>
-      </Pressable>
-    );
-  };
+  const f = useFont();
+  const button = (dir: 1 | -1) => (
+    <Btn
+      small
+      label={dir === 1 ? "+" : "−"}
+      disabled={!canStep(props.value, dir, props.min, props.max)}
+      onPress={() => props.onChange(stepValue(props.value, dir, props.min, props.max, props.step))}
+    />
+  );
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: space.md }}>
+    <View accessibilityLabel={props.label} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
       {button(-1)}
-      <Text style={{ color: p.text, fontSize: font.sm, minWidth: 40, textAlign: "center" }}>
-        {(props.format ?? String)(props.value)}
-      </Text>
+      <Text style={{ color: p.text, fontSize: f.sm, minWidth: 46, textAlign: "center", fontVariant: ["tabular-nums"] }}>{(props.format ?? String)(props.value)}</Text>
       {button(1)}
     </View>
   );
 }
 
+/** A compact radio group, with an optional label before it. */
 export function Segmented<V extends string>(props: {
   options: readonly { value: V; label: string }[];
   value: V;
   onChange: (next: V) => void;
+  label?: string;
 }) {
   const p = usePalette();
+  const f = useFont();
   return (
-    <View
-      accessibilityRole="radiogroup"
-      style={{ flexDirection: "row", borderRadius: radius.md, borderWidth: 1, borderColor: p.border, overflow: "hidden" }}
-    >
-      {props.options.map((o) => {
-        const selected = o.value === props.value;
-        return (
-          <Pressable
-            key={o.value}
-            accessibilityRole="radio"
-            accessibilityState={{ selected }}
-            onPress={() => props.onChange(o.value)}
-            style={{
-              height: size.control,
-              paddingHorizontal: space.lg,
-              justifyContent: "center",
-              backgroundColor: selected ? p.accent : "transparent",
-            }}
-          >
-            <Text style={{ color: selected ? p.onAccent : p.text, fontSize: font.sm }}>{o.label}</Text>
-          </Pressable>
-        );
-      })}
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+      {props.label ? <Text style={{ color: p.muted, fontSize: f.sm }}>{props.label}</Text> : null}
+      <View accessibilityRole="radiogroup" style={{ flexDirection: "row", padding: 2, borderRadius: 7, borderWidth: 1, borderColor: p.border }}>
+        {props.options.map((o) => {
+          const on = o.value === props.value;
+          return (
+            <Pressable
+              key={o.value}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: on }}
+              onPress={() => props.onChange(o.value)}
+              style={({ pressed }) => ({ paddingHorizontal: 9, paddingVertical: 3, borderRadius: 5, backgroundColor: on ? tint(p.border, 0.9) : pressed ? tint(p.border, 0.4) : "transparent" })}
+            >
+              <Text style={{ color: on ? p.text : p.muted, fontSize: f.sm }}>{o.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -213,11 +238,12 @@ export function Segmented<V extends string>(props: {
 /** A thin rule with a small centered label sitting on it. */
 export function LabeledRule({ label }: { label: string }) {
   const p = usePalette();
+  const f = useFont();
   const line = <View style={{ flex: 1, height: 1, backgroundColor: p.border }} />;
   return (
     <View accessibilityRole="header" style={{ flexDirection: "row", alignItems: "center", gap: space.md }}>
       {line}
-      <Text style={{ color: p.muted, fontSize: font.xs, fontWeight: "600", letterSpacing: 1 }}>{label}</Text>
+      <Text style={{ color: p.muted, fontSize: f.xxs, letterSpacing: 0.4, textTransform: "uppercase" }}>{label}</Text>
       {line}
     </View>
   );

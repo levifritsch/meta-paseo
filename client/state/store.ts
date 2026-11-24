@@ -1,4 +1,4 @@
-import { DEFAULT_DEF, EMPTY_SESSIONS, type BoardDef, type BoardSessions, type BoardView, type Collapse, type Layout } from "../../shared/core";
+import { DEFAULT_DEF, EMPTY_SESSIONS, withGrouping, type BoardDef, type BoardSessions, type BoardState, type BoardView, type Collapse, type Grouping, type Layout } from "../../shared/core";
 
 // A tiny external store. One instance per plugin install; state never lives in module scope.
 
@@ -138,3 +138,16 @@ export function setExpanded(store: BoardStore, id: string, expanded: boolean) {
   else next.delete(id);
   setEphemeral(store, { expanded: next });
 }
+
+// Layout actions on the board definition (per client).
+export const setGrouping = (store: BoardStore, grouping: Grouping) => editDef(store, (d) => withGrouping(d, grouping));
+
+export const setFolded = (store: BoardStore, columnId: string, folded: boolean) =>
+  editDef(store, (d) => (d.state.folded[columnId] === folded ? d : { ...d, state: { ...d.state, folded: { ...d.state.folded, [columnId]: folded } } }));
+
+const sameState = (a: BoardState, b: BoardState) =>
+  JSON.stringify([a.workspaceOrder, Object.entries(a.folded).sort()]) === JSON.stringify([b.workspaceOrder, Object.entries(b.folded).sort()]);
+
+/** Save the layout state the engine reconciled (new workspaces in, gone ones out). A no-op when unchanged. */
+export const commitBoardState = (store: BoardStore, state: BoardState) =>
+  editDef(store, (d) => (sameState(d.state, state) ? d : { ...d, state }));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ageLabel, contextPercent, helperSummary } from "../../client/ui/features/card-view";
+import { ageLabel, compactMeta, contextPercent, helperSummary, joinMeta } from "../../client/ui/features/card-view";
 
 describe("ageLabel", () => {
   const now = 10_000_000_000;
@@ -27,5 +27,17 @@ describe("helperSummary", () => {
     expect(helperSummary(0, 0)).toBeNull();
     expect(helperSummary(1, 0)).toBe("1 sub-agent");
     expect(helperSummary(2, 1)).toBe("2 sub-agents · 1 background task");
+  });
+});
+
+describe("compactMeta and joinMeta", () => {
+  it("names the state and how long ago", () => {
+    expect(compactMeta("running", "5m")).toBe("Running · 5m");
+    expect(compactMeta("failed", "now")).toBe("Error · now");
+  });
+  it("drops empty parts", () => {
+    expect(joinMeta("main", "5m")).toBe("main · 5m");
+    expect(joinMeta(undefined, "5m")).toBe("5m");
+    expect(joinMeta("", null, false)).toBe("");
   });
 });

@@ -1,22 +1,28 @@
-import { ScrollView } from "@getpaseo/plugin/client/ui";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { Icon, ScrollView } from "@getpaseo/plugin/client/ui";
+import { useEffect, useState, type ReactNode } from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { groupBlocks, latestReply, type Turn } from "../../../shared/core";
 import { useAgentChat } from "../../data/useAgentChat";
 import { useDraft } from "../../state/StoreContext";
 import { Btn, LabeledRule } from "../atoms";
-import { useFollowScroll, usePrepend } from "../behaviors";
+import { Fade, useFollowScroll, usePrepend } from "../behaviors";
 import { ChatRow, Composer } from "../molecules";
-import { usePalette } from "../tokens/context";
-import { font, radius, space } from "../tokens/tokens";
+import { useFont, usePalette } from "../tokens/context";
+import { chatBackground, size, space } from "../tokens/tokens";
 import { RequestPanel } from "./requests";
 
+/** Chat contents sit a little closer to the background than the card's own text. */
+const CHAT_EMPHASIS = 0.8;
+
 /**
- * A session's chat: the last turns, live, with Show earlier, the oldest request, and a composer.
- * `hideChat` folds the turns away and keeps the request and composer (the card's Show chat link).
+ * A session's chat: the last turns, live, with Show earlier, the oldest request, and a message box.
+ * It has no frame of its own: a card gives it one. `hideChat` folds the turns away and keeps the
+ * request and message box; `trailing` sits after the last turn; `footnote` floats over the bottom
+ * fade; `color` is the card's, for the message box. The chat takes `chatHeight`, or the room there is.
  */
-export function ChatView({ agentId, hideChat = false }: { agentId: string; hideChat?: boolean }) {
+export function ChatView({ agentId, hideChat = false, chatHeight, color, trailing, footnote }: { agentId: string; hideChat?: boolean; chatHeight?: number; color?: string; trailing?: ReactNode; footnote?: ReactNode }) {
   const p = usePalette();
+  const f = useFont();
   const chat = useAgentChat(agentId);
   const scroll = useFollowScroll();
   const earlier = usePrepend<Turn>(scroll.prepended, space.lg);
@@ -59,10 +65,10 @@ export function ChatView({ agentId, hideChat = false }: { agentId: string; hideC
       return (
         <View
           key={first.id}
-          style={{ gap: space.md }}
+          style={{ gap: space.run }}
           onLayout={isLatest ? (e) => scroll.setReply({ top: e.nativeEvent.layout.y, height: e.nativeEvent.layout.height }) : undefined}
         >
-          {isLatest && <LabeledRule label="LATEST REPLY" />}
+          {isLatest && <LabeledRule label="Latest reply" />}
           {g.blocks.map((b) => (
             <ChatRow key={b.id} block={b} />
           ))}
@@ -71,43 +77,76 @@ export function ChatView({ agentId, hideChat = false }: { agentId: string; hideC
     });
 
   return (
-    <View style={{ flex: hideChat ? undefined : 1, backgroundColor: p.card, borderRadius: radius.md, borderWidth: 1, borderColor: p.border, overflow: "hidden" }}>
+    <View style={{ flex: hideChat || chatHeight ? undefined : 1 }}>
       {!hideChat && (
-      <View style={{ flex: 1 }}>
-        <ScrollView {...scroll.scrollProps} contentContainerStyle={{ padding: space.lg, gap: space.xxl }}>
-          {chat.hasOlder && (
-            <Btn label={loadingOlder ? "Loading…" : "Show earlier"} variant="ghost" disabled={loadingOlder} onPress={showEarlier} style={{ alignSelf: "center" }} />
-          )}
-          {earlier.incoming && (
-            <View {...earlier.measureProps} pointerEvents="none" style={[earlier.hiddenStyle, { gap: space.xxl }]}>
-              {turnRows(earlier.incoming)}
+        <View style={{ flex: chatHeight ? undefined : 1, height: chatHeight, backgroundColor: chatBackground(p) }}>
+          <ScrollView {...scroll.scrollProps} contentContainerStyle={{ paddingHorizontal: size.gutter, paddingVertical: size.fade - 6, gap: space.xl, opacity: CHAT_EMPHASIS }}>
+            {chat.hasOlder && (
+              <Btn small label={loadingOlder ? "Loading…" : "Show earlier"} variant="ghost" disabled={loadingOlder} onPress={showEarlier} style={{ alignSelf: "center" }} />
+            )}
+            {earlier.incoming && (
+              <View {...earlier.measureProps} pointerEvents="none" style={[earlier.hiddenStyle, { gap: space.xl }]}>
+                {turnRows(earlier.incoming)}
+              </View>
+            )}
+            {turnRows(earlier.items)}
+            {turnRows(chat.tailTurns)}
+            {!chat.ready && !chat.error && <Text style={{ color: p.muted, fontSize: f.sm }}>Loading…</Text>}
+            {chat.error && <Text style={{ color: p.error, fontSize: f.sm }}>{chat.error}</Text>}
+            {running && <ActivityIndicator size="small" color={p.running} style={{ alignSelf: "flex-start" }} />}
+            {trailing}
+          </ScrollView>
+          <Fade color={p.card} edge="top" height={size.fade} />
+          <Fade color={p.card} edge="bottom" height={size.fade} />
+          {footnote ? (
+            <View pointerEvents="none" style={{ position: "absolute", left: 16, right: 130, bottom: 6, flexDirection: "row", alignItems: "center" }}>
+              {footnote}
             </View>
+          ) : null}
+          {scroll.showJump && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Jump to latest"
+              onPress={scroll.follow}
+              style={({ pressed }) => ({
+                position: "absolute",
+                right: size.composerInset,
+                bottom: size.composerInset,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 99,
+                borderWidth: 1,
+                borderColor: p.border,
+                backgroundColor: p.card,
+                opacity: pressed ? 0.8 : 1,
+                shadowColor: "#000",
+                shadowOpacity: 0.18,
+                shadowRadius: 6,
+                shadowOffset: { width: 0, height: 2 },
+              })}
+            >
+              <Icon name="ArrowDown" size={12} color={p.text} />
+              <Text style={{ color: p.text, fontSize: f.xs }}>Jump to latest</Text>
+            </Pressable>
           )}
-          {turnRows(earlier.items)}
-          {turnRows(chat.tailTurns)}
-          {!chat.ready && !chat.error && <ActivityIndicator color={p.muted} />}
-          {chat.error && <Text style={{ color: p.error, fontSize: font.sm }}>{chat.error}</Text>}
-          {running && <ActivityIndicator color={p.running} style={{ alignSelf: "flex-start" }} />}
-        </ScrollView>
-        {scroll.showJump && (
-          <View style={{ position: "absolute", right: space.lg, bottom: space.lg }}>
-            <Btn label="Jump to latest" onPress={scroll.follow} />
-          </View>
-        )}
-      </View>
+        </View>
       )}
-      <View style={{ padding: space.lg, gap: space.md, borderTopWidth: hideChat ? 0 : 1, borderTopColor: p.border }}>
-        {request && (
+      {request && (
+        <View style={{ paddingHorizontal: size.gutter, paddingTop: 2, paddingBottom: 10 }}>
           <RequestPanel
             key={request.id}
             request={request}
             onAction={(actionId) => void chat.act(request.id, actionId)}
             onAnswer={(answers) => request.kind === "question" && void chat.answer(request.id, request.questions, answers)}
           />
-        )}
-        {sendError && <Text style={{ color: p.error, fontSize: font.sm }}>{sendError}</Text>}
-        <Composer value={draft} onChange={setDraft} onSend={send} placeholder={running ? "Message (steers the current turn)" : "Message"} />
-      </View>
+        </View>
+      )}
+      {request && <View style={{ height: 1, backgroundColor: p.border, marginHorizontal: size.gutter, marginBottom: 10 }} />}
+      {sendError && <Text style={{ color: p.error, fontSize: f.sm, paddingHorizontal: size.gutter, paddingBottom: space.md }}>{sendError}</Text>}
+      <Composer value={draft} onChange={setDraft} onSend={send} color={color} placeholder={running ? "Message (steers the current turn)" : "Message the agent"} />
     </View>
   );
 }

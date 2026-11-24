@@ -18,12 +18,20 @@ const DATA_CHECK_ID = "data-check";
 export default function contribute(client: PluginClientContext) {
   const store = createBoardStore(); // one per install; screens read it through a provider
   const disposers = [
-    client.addScreen({ id: SCREEN_ID, title: "Sessions", Component: BoardScreen }),
+    client.addScreen({ id: SCREEN_ID, title: "Sessions", Component: withStore(store, BoardScreen) }),
     client.addScreen({ id: GALLERY_ID, title: "UI gallery", Component: Gallery }),
     client.addScreen({ id: SPIKES_ID, title: "Spikes", Component: Spikes }),
     client.addScreen({ id: CHATS_ID, title: "Chats", Component: withStore(store, Chats) }),
     client.addScreen({ id: BOARD_SPIKES_ID, title: "Board spikes", Component: BoardSpikes }),
     client.addScreen({ id: DATA_CHECK_ID, title: "Board data", Component: withStore(store, DataCheck) }),
+    client.addCommandCenterItem({
+      id: "open-board",
+      title: "Open MetaPaseo board",
+      icon: "LayoutDashboard",
+      keywords: ["board", "sessions", "columns", "cards"],
+      context: "global",
+      onSelect: (context) => context.openScreen({ screenId: SCREEN_ID }),
+    }),
     client.addCommandCenterItem({
       id: "open-data-check",
       title: "Open MetaPaseo board data check",

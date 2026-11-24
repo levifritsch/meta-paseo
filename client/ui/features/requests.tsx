@@ -1,13 +1,13 @@
 // What is waiting on the user, drawn by kind. Add a kind by adding a renderer to the registry.
-import { Markdown, ScrollView, TextInput } from "@getpaseo/plugin/client/ui";
+import { ScrollView, TextInput } from "@getpaseo/plugin/client/ui";
 import { useState, type ComponentType } from "react";
 import type { NativeSyntheticEvent, TextInputKeyPressEventData } from "react-native";
 import { Pressable, Text, View } from "react-native";
 import { emptyAnswer, isAnswered, isComplete, selectCustom, setCustomText, shouldAdvance, togglePick, type Action, type Answer, type Request, type RequestKind } from "../../../shared/core";
 import { Btn, Chip } from "../atoms";
-import { CodeBlock } from "../molecules";
-import { usePalette } from "../tokens/context";
-import { font, radius, space } from "../tokens/tokens";
+import { CodeBlock, Reply } from "../molecules";
+import { usePalette, useFont } from "../tokens/context";
+import { radius, space } from "../tokens/tokens";
 
 export type RendererProps<K extends RequestKind> = {
   request: Extract<Request, { kind: K }>;
@@ -29,16 +29,18 @@ function Actions({ actions, onAction }: { actions: Action[]; onAction: (id: stri
 
 function Heading({ children }: { children: string }) {
   const p = usePalette();
-  return <Text style={{ color: p.text, fontSize: font.md, fontWeight: "700" }}>{children}</Text>;
+  const f = useFont();
+  return <Text style={{ color: p.text, fontSize: f.md, fontWeight: "700" }}>{children}</Text>;
 }
 
 function PermissionRequest({ request, onAction }: RendererProps<"permission">) {
   const p = usePalette();
+  const f = useFont();
   return (
     <View style={{ gap: space.md }}>
       <Heading>{request.title}</Heading>
       {request.code !== undefined && <CodeBlock text={request.code} />}
-      {request.description && <Text style={{ color: p.muted, fontSize: font.sm }}>{request.description}</Text>}
+      {request.description && <Text style={{ color: p.muted, fontSize: f.sm }}>{request.description}</Text>}
       <Actions actions={request.actions} onAction={onAction} />
     </View>
   );
@@ -49,7 +51,7 @@ function PlanRequest({ request, onAction }: RendererProps<"plan">) {
     <View style={{ gap: space.md }}>
       <Heading>{request.title ?? "Plan"}</Heading>
       <ScrollView style={{ maxHeight: 280 }}>
-        <Markdown>{request.text}</Markdown>
+        <Reply text={request.text} />
       </ScrollView>
       <Actions actions={request.actions} onAction={onAction} />
     </View>
@@ -58,10 +60,11 @@ function PlanRequest({ request, onAction }: RendererProps<"plan">) {
 
 function OtherRequest({ request, onAction }: RendererProps<"other">) {
   const p = usePalette();
+  const f = useFont();
   return (
     <View style={{ gap: space.md }}>
       <Heading>{request.title}</Heading>
-      {request.description && <Text style={{ color: p.muted, fontSize: font.sm }}>{request.description}</Text>}
+      {request.description && <Text style={{ color: p.muted, fontSize: f.sm }}>{request.description}</Text>}
       <Actions actions={request.actions} onAction={onAction} />
     </View>
   );
@@ -70,6 +73,7 @@ function OtherRequest({ request, onAction }: RendererProps<"other">) {
 /** Multiple-choice questions, one tab per question when there are several. Cmd/Ctrl+Enter sends. */
 function QuestionForm({ request, onAnswer }: RendererProps<"question">) {
   const p = usePalette();
+  const f = useFont();
   const qs = request.questions;
   const [tab, setTab] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>(() => qs.map(emptyAnswer));
@@ -107,11 +111,11 @@ function QuestionForm({ request, onAnswer }: RendererProps<"question">) {
             onPress={() => pick(o.label)}
             style={{ padding: space.md, borderRadius: radius.md, borderWidth: 1, borderColor: picked ? p.accent : p.border, gap: space.xs }}
           >
-            <Text style={{ color: p.text, fontSize: font.md, fontWeight: "600" }}>
+            <Text style={{ color: p.text, fontSize: f.md, fontWeight: "600" }}>
               {q.multiSelect ? (picked ? "☑ " : "☐ ") : picked ? "● " : "○ "}
               {o.label}
             </Text>
-            {o.description && <Text style={{ color: p.muted, fontSize: font.sm }}>{o.description}</Text>}
+            {o.description && <Text style={{ color: p.muted, fontSize: f.sm }}>{o.description}</Text>}
           </Pressable>
         );
       })}
@@ -124,7 +128,7 @@ function QuestionForm({ request, onAnswer }: RendererProps<"question">) {
         onKeyPress={onKeyPress}
         placeholder="Or type your own answer"
         placeholderTextColor={p.muted}
-        style={{ minHeight: 3 * font.md * 1.4 + space.lg, color: p.text, fontSize: font.md, padding: space.md, borderWidth: 1, borderColor: a.custom ? p.accent : p.border, borderRadius: radius.md, opacity: a.custom ? 1 : 0.6 }}
+        style={{ minHeight: 3 * f.md * 1.4 + space.lg, color: p.text, fontSize: f.md, padding: space.md, borderWidth: 1, borderColor: a.custom ? p.accent : p.border, borderRadius: radius.md, opacity: a.custom ? 1 : 0.6 }}
       />
       <Btn label="Send answers" onPress={submit} disabled={!complete} style={{ alignSelf: "flex-start" }} />
     </View>

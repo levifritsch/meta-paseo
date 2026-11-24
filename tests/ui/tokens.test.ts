@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CARD_STATES } from "../../shared/core";
 import { canStep, stepValue } from "../../client/ui/atoms/stepper-math";
-import { FONT_SCALE, SESSION_COLORS, palette, stateColor, tint } from "../../client/ui/tokens";
+import { FONT_SCALE, SESSION_COLORS, font, fadeBands, isDark, mix, palette, scaledFont, stateColor, tint } from "../../client/ui/tokens";
 
 const theme = {
   colors: {
@@ -43,5 +43,34 @@ describe("stepper math", () => {
     expect(canStep(max, 1, min, max)).toBe(false);
     expect(canStep(1, 1, min, max)).toBe(true);
     expect(canStep(min, -1, min, max)).toBe(false);
+  });
+});
+
+describe("scaledFont", () => {
+  it("is the fixed sizes at scale 1", () => expect(scaledFont(1)).toBe(font));
+  it("scales every size, to a tenth of a pixel", () => {
+    expect(scaledFont(1.5).sm).toBe(18);
+    expect(scaledFont(1.5).md).toBe(19.5);
+    expect(scaledFont(0.8).heading).toBe(14.4);
+    expect(Object.keys(scaledFont(1.2))).toEqual(Object.keys(font));
+  });
+});
+
+describe("color helpers", () => {
+  it("mix moves toward the target and leaves other formats alone", () => {
+    expect(mix("#000000", "#ffffff", 0.5)).toBe("#808080");
+    expect(mix("#102030", "#ffffff", 0)).toBe("#102030");
+    expect(mix("rgb(1,2,3)", "#ffffff", 0.5)).toBe("rgb(1,2,3)");
+  });
+  it("isDark reads luminance, and unreadable colors count as dark", () => {
+    expect(isDark("#111111")).toBe(true);
+    expect(isDark("#ffffff")).toBe(false);
+    expect(isDark("red")).toBe(true);
+  });
+  it("fadeBands fall from the edge color to nearly nothing, or null for a non-hex color", () => {
+    const bands = fadeBands("#000000", 4)!;
+    expect(bands).toHaveLength(4);
+    expect(bands[0]).toBe("rgba(0, 0, 0, 0.92)");
+    expect(fadeBands("red", 4)).toBeNull();
   });
 });

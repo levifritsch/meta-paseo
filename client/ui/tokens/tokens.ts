@@ -69,10 +69,46 @@ export function tint(color: string, alpha: number): string {
   return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
-export const space = { xs: 2, sm: 4, md: 8, lg: 12, xl: 16, xxl: 28 } as const;
-export const radius = { sm: 4, md: 8, pill: 999 } as const;
-export const font = { xs: 10, sm: 12, md: 14, lg: 16 } as const;
-export const size = { dot: 8, control: 28, badge: 18, code: 240, outline: 2, swatch: 20, menu: 200, chat: 420 } as const;
+export const space = { xs: 2, sm: 4, run: 6, md: 8, lg: 12, xl: 16, xxl: 28 } as const;
+export const radius = { sm: 4, control: 6, md: 8, menu: 9, bubble: 10, field: 12, card: 14, pill: 999 } as const;
+/** Type sizes at scale 1. `useFont()` returns them scaled. */
+export const font = { xxs: 10.5, xs: 11.5, sm: 12, md: 13, lg: 14, title: 15.5, heading: 18 } as const;
+export type Font = { [K in keyof typeof font]: number };
+/** The type sizes at `scale`, to a tenth of a pixel. Scale 1 returns `font` itself. */
+export function scaledFont(scale: number): Font {
+  if (scale === 1) return font;
+  return Object.fromEntries(Object.entries(font).map(([k, v]) => [k, Math.round(v * scale * 10) / 10])) as Font;
+}
+export const size = {
+  dot: 9,
+  spinner: 13,
+  badge: 18,
+  control: 28,
+  iconButtonW: 26,
+  iconButtonH: 24,
+  code: 240,
+  swatch: 26,
+  menuWidth: 216,
+  menuRow: 34,
+  optionsWidth: 270,
+  /** The chat's visible height inside a full card. */
+  chat: 375,
+  /** The chat's top and bottom fades. */
+  fade: 36,
+  /** The message box: its minimum height, which is also the send button's diameter. */
+  input: 34,
+  inputLine: 18,
+  inputPad: 7,
+  inputLines: 10,
+  /** Space between the send button and the card's edge. */
+  composerInset: 12,
+  /** A folded column's strip, and where its name starts. */
+  strip: 46,
+  stripTop: 90,
+  stripDots: 14,
+  /** Space either side of a column's cards. */
+  gutter: 14,
+} as const;
 export const motion = { fast: 120, base: 200, shake: 320, settle: 150 } as const;
 export const FONT_SCALE = { min: 0.8, max: 1.5, step: 0.1 } as const;
 
@@ -99,3 +135,50 @@ export const SESSION_COLORS: readonly SessionColor[] = [
   { id: "brown", hex: "#814830", auto: true },
   { id: "gray", hex: "#8b8b8b", auto: false },
 ];
+
+export const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
+
+const hexParts = (color: string): [number, number, number] | null => {
+  const hex = /^#([0-9a-f]{6})$/i.exec(color.trim());
+  if (!hex) return null;
+  const n = parseInt(hex[1]!, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+
+/** `from` moved `amount` (0..1) of the way toward `to`. A color that is not `#rrggbb` leaves `from` unchanged. */
+export function mix(from: string, to: string, amount: number): string {
+  const a = hexParts(from);
+  const b = hexParts(to);
+  if (!a || !b) return from;
+  const t = Math.min(1, Math.max(0, amount));
+  return `#${a.map((v, i) => Math.round(v + (b[i]! - v) * t).toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** Whether `color` (`#rrggbb`) is dark. Unreadable colors count as dark. */
+export function isDark(color: string): boolean {
+  const c = hexParts(color);
+  return c ? (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255 < 0.5 : true;
+}
+
+/** How far the chat's background sits from the card color toward the page color. */
+export const CHAT_BG_MIX = 0.5;
+/** The chat area: a few points off the card color, in light or dark. */
+export const chatBackground = (p: Palette) => mix(p.card, p.bg, CHAT_BG_MIX);
+
+/** A faint glow just inside a card's outline, in the outline's color (web box-shadow). */
+export const innerGlow = (color: string) => `inset 0 0 8px 0 ${tint(color, 0.13)}`;
+/** A faint glow around the focused message box and send button. */
+export const outerGlow = (color: string) => `0 0 7px 0 ${tint(color, 0.2)}`;
+
+/** `color` at the edge, fading to nothing over `steps` bands: the fallback where a CSS gradient is unavailable. */
+export function fadeBands(color: string, steps: number): string[] | null {
+  if (!hexParts(color)) return null;
+  return Array.from({ length: steps }, (_, i) => tint(color, 0.92 * (1 - i / steps)));
+}
+
+/** Text that sits over the chat reads through a strong halo in the card color. Web stacks layers of rising blur, since one shadow is too thin. */
+export function halo(card: string): { textShadow?: string; textShadowColor?: string; textShadowRadius?: number; textShadowOffset?: { width: number; height: number } } {
+  const solid = tint(card, 1);
+  const layers = [2, 4, 7, 11, 16].map((r) => `0 0 ${r}px ${solid}`).join(", ");
+  return { textShadow: layers, textShadowColor: solid, textShadowRadius: 8, textShadowOffset: { width: 0, height: 0 } };
+}

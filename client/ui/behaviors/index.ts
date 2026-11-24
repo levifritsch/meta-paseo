@@ -5,3 +5,5 @@ export * from "./useFollowScroll";
 export * from "./useReducedMotion";
 export * from "./usePrepend";
 export * from "./Glide";
+export * from "./FocusScope";
+export * from "./Fade";

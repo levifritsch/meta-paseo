@@ -37,7 +37,11 @@ function Picker() {
         {agents.length === 0 && <Text style={{ color: p.muted, fontSize: font.sm }}>No sessions.</Text>}
       </ScrollView>
       <View style={{ flex: 1 }}>
-        {picked ? <ChatView key={picked} agentId={picked} /> : <Text style={{ color: p.muted, fontSize: font.sm }}>Pick a session.</Text>}
+        {picked ? (
+          <View style={{ flex: 1, backgroundColor: p.card, borderRadius: radius.card, borderWidth: 1, borderColor: p.border, overflow: "hidden" }}>
+            <ChatView key={picked} agentId={picked} />
+          </View>
+        ) : <Text style={{ color: p.muted, fontSize: font.sm }}>Pick a session.</Text>}
       </View>
     </View>
   );

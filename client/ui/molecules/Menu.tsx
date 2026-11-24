@@ -1,49 +1,77 @@
-// A small dropdown: a "⋯" trigger and a panel under it. The caller owns what is inside.
-import type { ReactNode } from "react";
+// A "⋯" button and the menu under it: rows with an icon, grouped by rules. The panel is a Popover.
+import { Icon } from "@getpaseo/plugin/client/ui";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { usePalette } from "../tokens/context";
-import { font, radius, size, space } from "../tokens/tokens";
+import { IconButton, useHover } from "../atoms";
+import { useFont, usePalette } from "../tokens/context";
+import { MONO, radius, size, tint } from "../tokens/tokens";
+import { Popover, usePopover, type Anchor } from "./Popover";
 
-export function Menu(props: { open: boolean; onOpenChange: (open: boolean) => void; label: string; children: ReactNode }) {
+export type MenuRow = {
+  key: string;
+  label: string;
+  /** A Lucide icon name. */
+  icon: string;
+  /** Gets the button's place, for a row that opens something else beside it (the color picker). */
+  onPress: (at: Anchor) => void;
+  danger?: boolean;
+  hint?: string;
+  /** A row that asks once more: its first press shows this label, the second runs `onPress`. */
+  confirm?: string;
+};
+
+function Row({ row, onRun }: { row: MenuRow; onRun: (row: MenuRow) => void }) {
   const p = usePalette();
+  const f = useFont();
+  const { hovered, props } = useHover();
+  const [asking, setAsking] = useState(false);
   return (
-    <View style={{ position: "relative", zIndex: props.open ? 10 : 0 }}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={props.label}
-        accessibilityState={{ expanded: props.open }}
-        onPress={() => props.onOpenChange(!props.open)}
-        style={{ width: size.control, height: size.control, alignItems: "center", justifyContent: "center", borderRadius: radius.md }}
-      >
-        <Text style={{ color: p.muted, fontSize: font.lg, fontWeight: "700" }}>⋯</Text>
-      </Pressable>
-      {props.open && (
-        <View
-          style={{
-            position: "absolute",
-            top: size.control,
-            right: 0,
-            width: size.menu,
-            padding: space.sm,
-            gap: space.xs,
-            backgroundColor: p.chrome,
-            borderRadius: radius.md,
-            borderWidth: 1,
-            borderColor: p.border,
-          }}
-        >
-          {props.children}
-        </View>
-      )}
-    </View>
+    <Pressable
+      accessibilityRole="menuitem"
+      onPress={() => (row.confirm && !asking ? setAsking(true) : onRun(row))}
+      {...props}
+      style={({ pressed }) => ({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 9,
+        height: size.menuRow,
+        paddingHorizontal: 9,
+        borderRadius: radius.control,
+        backgroundColor: pressed ? tint(p.border, 0.75) : hovered ? tint(p.border, 0.45) : "transparent",
+      })}
+    >
+      <Icon name={row.icon} size={14} color={row.danger ? p.error : p.muted} />
+      <Text style={{ flex: 1, color: row.danger ? p.error : p.text, fontSize: f.md }}>{asking && row.confirm ? row.confirm : row.label}</Text>
+      {row.hint ? <Text style={{ color: p.muted, fontSize: f.xxs, fontFamily: MONO }}>{row.hint}</Text> : null}
+    </Pressable>
   );
 }
 
-export function MenuItem(props: { label: string; onPress: () => void; danger?: boolean }) {
+/** `groups` are separated by a rule. Rows close the menu, then run. */
+export function MenuButton({ label, groups }: { label: string; groups: readonly (readonly MenuRow[])[] }) {
   const p = usePalette();
+  const pop = usePopover();
+  const rows = groups.reduce((n, g) => n + g.length, 0);
+  const run = (row: MenuRow) => {
+    const at = pop.at;
+    pop.close();
+    if (at) row.onPress(at);
+  };
   return (
-    <Pressable accessibilityRole="menuitem" onPress={props.onPress} style={{ paddingHorizontal: space.md, paddingVertical: space.md, borderRadius: radius.sm }}>
-      <Text style={{ color: props.danger ? p.error : p.text, fontSize: font.sm }}>{props.label}</Text>
-    </Pressable>
+    <>
+      <View ref={pop.ref} collapsable={false}>
+        <IconButton icon="Ellipsis" label={label} active={pop.at !== null} onPress={pop.at ? pop.close : pop.open} />
+      </View>
+      <Popover at={pop.at} width={size.menuWidth} height={rows * size.menuRow + (groups.length - 1) * 9 + 8} label="menu" onClose={pop.close}>
+        {groups.map((group, i) => (
+          <View key={i}>
+            {i > 0 ? <View style={{ height: 1, backgroundColor: p.border, marginVertical: 4, marginHorizontal: 2 }} /> : null}
+            {group.map((row) => (
+              <Row key={row.key} row={row} onRun={run} />
+            ))}
+          </View>
+        ))}
+      </Popover>
+    </>
   );
 }
