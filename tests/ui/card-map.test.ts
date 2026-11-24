@@ -127,16 +127,16 @@ describe("workspaces", () => {
   });
 });
 
-describe("card extras: context use and error", () => {
+describe("card extras: context tokens and error", () => {
   const extras = (over: Record<string, unknown>) => mapBoard([agent(over)], ws).extras["a1"]!;
-  it("context use is used over max, clamped to 0..1", () => {
-    expect(extras({ lastUsage: { contextWindowUsedTokens: 50, contextWindowMaxTokens: 200 } }).contextUse).toBe(0.25);
-    expect(extras({ lastUsage: { contextWindowUsedTokens: 500, contextWindowMaxTokens: 200 } }).contextUse).toBe(1);
+  it("context tokens are the tokens in use", () => {
+    expect(extras({ lastUsage: { contextWindowUsedTokens: 50, contextWindowMaxTokens: 200 } }).contextTokens).toBe(50);
+    expect(extras({ lastUsage: { contextWindowUsedTokens: 5 } }).contextTokens).toBe(5);
   });
-  it("context use is absent without a usable window", () => {
-    expect(extras({}).contextUse).toBeUndefined();
-    expect(extras({ lastUsage: { contextWindowUsedTokens: 5 } }).contextUse).toBeUndefined();
-    expect(extras({ lastUsage: { contextWindowUsedTokens: 5, contextWindowMaxTokens: 0 } }).contextUse).toBeUndefined();
+  it("context tokens are absent without a usable count", () => {
+    expect(extras({}).contextTokens).toBeUndefined();
+    expect(extras({ lastUsage: { contextWindowUsedTokens: -1 } }).contextTokens).toBeUndefined();
+    expect(extras({ lastUsage: { contextWindowUsedTokens: Number.NaN } }).contextTokens).toBeUndefined();
   });
   it("carries the last error, trimmed, and drops a blank one", () => {
     expect(extras({ lastError: "  boom " }).error).toBe("boom");

@@ -1,6 +1,6 @@
 // Small pieces a card is built from. Each is stateless apart from its own hover.
 import { Icon } from "@getpaseo/plugin/client/ui";
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import { useHover } from "../atoms";
 import { useFont, usePalette } from "../tokens/context";
 import { halo, icon, size, space, type Palette } from "../tokens/tokens";
@@ -29,26 +29,26 @@ export function TitleLink(props: { title: string; lines: number; onOpen?: () => 
 }
 
 /** Model, context use and helper counts. `over` draws them over the chat's bottom fade, with a halo to read through. */
-export function MetaTags(props: { model?: string; contextPercent: number | null; subAgents: number; backgroundTasks: number; over?: boolean }) {
+export function MetaTags(props: { model?: string; contextTokens: string | null; subAgents: number; backgroundTasks: number; over?: boolean }) {
   const p = usePalette();
   const f = useFont();
-  const shadow = props.over ? [halo(p.card), { padding: space.lg, margin: -space.lg }] : null;
+  const shadow = props.over ? [halo(p.card, Platform.OS === "web"), { padding: space.lg, margin: -space.lg }] : null;
   const small = { color: p.muted, fontSize: f.xs, fontVariant: ["tabular-nums" as const] };
   const label = [
-    props.contextPercent === null ? null : `Context used ${props.contextPercent} percent`,
+    props.contextTokens === null ? null : `${props.contextTokens} tokens of context used`,
     props.subAgents > 0 ? `${props.subAgents} sub-agents` : null,
     props.backgroundTasks > 0 ? `${props.backgroundTasks} background tasks` : null,
   ]
     .filter(Boolean)
     .join(", ");
   return (
-    <View accessibilityLabel={label || undefined} style={{ flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 }}>
+    <View accessibilityLabel={label || undefined} style={{ flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0, gap: space.xl }}>
       {props.model ? (
         <Text numberOfLines={1} style={[{ color: p.muted, fontSize: f.sm, flexShrink: 1 }, shadow, clip]}>
           {props.model}
         </Text>
       ) : null}
-      {props.contextPercent !== null ? <Text style={[small, { marginLeft: space.md }, shadow]}>◔ {props.contextPercent}%</Text> : null}
+      {props.contextTokens !== null ? <Text style={[small, shadow]}>{props.contextTokens} tokens</Text> : null}
       {props.subAgents > 0 ? <Count name="Bot" n={props.subAgents} color={p.muted} shadow={shadow} /> : null}
       {props.backgroundTasks > 0 ? <Count name="Terminal" n={props.backgroundTasks} color={p.running} shadow={shadow} /> : null}
     </View>
@@ -58,7 +58,7 @@ export function MetaTags(props: { model?: string; contextPercent: number | null;
 function Count({ name, n, color, shadow }: { name: string; n: number; color: string; shadow: unknown }) {
   const f = useFont();
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm, marginLeft: space.md }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
       <Icon name={name} size={icon.xs} color={color} />
       <Text style={[{ color, fontSize: f.xs, fontVariant: ["tabular-nums"] }, shadow as object]}>{n}</Text>
     </View>

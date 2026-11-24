@@ -39,6 +39,19 @@ describe("order", () => {
     const third = board(BY_STATUS, second.layout, snap([a, b, c, d], { expanded: new Set(["c", "d"]) }));
     expect(col(third, "running")).toEqual(["a", "b", "c", "d"]);
   });
+  it("sends a card you collapse to the top of the compact stack (S5)", () => {
+    const x = card("x", { state: "done", lastActivity: 3 });
+    const y = card("y", { state: "done", lastActivity: 2 });
+    const z = card("z", { state: "done", lastActivity: 1 });
+    const first = board(BY_STATUS, null, snap([x, y, z]));
+    const y1 = { y: { state: "done" as const, activity: 2 } };
+    const second = board(BY_STATUS, first.layout, snap([x, y, z], { collapsed: y1 }));
+    expect(col(second)).toEqual(["x", "z", "y"]);
+    const third = board(BY_STATUS, second.layout, snap([x, y, z], { collapsed: { ...y1, z: { state: "done", activity: 1 } } }));
+    expect(col(third)).toEqual(["x", "z", "y"]);
+    const fourth = board(BY_STATUS, third.layout, snap([x, y, z], { collapsed: { ...y1, z: { state: "done", activity: 1 }, x: { state: "done", activity: 3 } } }));
+    expect(col(fourth)).toEqual(["x", "z", "y"]);
+  });
   it("lets a joining card land below the expanded cards already there (S6)", () => {
     const old = card("old", { state: "done", lastActivity: 1 });
     const first = board(BY_STATUS, null, snap([old]));
@@ -85,5 +98,27 @@ describe("focus", () => {
     const released = board(BY_STATUS, pinned.layout, snap([moved], { focus: null }));
     expect(col(released, "done")).toEqual([]);
     expect(col(released, "running")).toEqual(["a"]);
+  });
+  const sizeOf = (r: ReturnType<typeof board>, id: string) =>
+    r.layout.columns.flatMap((c) => c.sections.flatMap((s) => s.cards)).find((c) => c.id === id)?.expanded;
+  it("applies a hand collapse or expand at once, while the card still has focus (F4)", () => {
+    const a = card("a", { state: "done" });
+    const first = board(BY_STATUS, null, snap([a], { focus: "a" }));
+    expect(sizeOf(first, "a")).toBe(true);
+    const collapsed = board(BY_STATUS, first.layout, snap([a], { focus: "a", collapsed: { a: { state: "done", activity: a.lastActivity } } }));
+    expect(sizeOf(collapsed, "a")).toBe(false);
+    const reopened = board(BY_STATUS, collapsed.layout, snap([a], { focus: "a", expanded: new Set(["a"]) }));
+    expect(sizeOf(reopened, "a")).toBe(true);
+    const r = card("r");
+    const compact = board(BY_STATUS, null, snap([r], { focus: "r" }));
+    expect(sizeOf(compact, "r")).toBe(false);
+    const opened = board(BY_STATUS, compact.layout, snap([r], { focus: "r", expanded: new Set(["r"]) }));
+    expect(sizeOf(opened, "r")).toBe(true);
+  });
+  it("still pins size against an automatic change (F1)", () => {
+    const r = card("r");
+    const first = board(BY_STATUS, null, snap([r], { focus: "r" }));
+    const done = { ...r, state: "done" as const };
+    expect(sizeOf(board(BY_STATUS, first.layout, snap([done], { focus: "r" })), "r")).toBe(false);
   });
 });

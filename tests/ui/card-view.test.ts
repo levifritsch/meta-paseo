@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ageLabel, compactMeta, contextPercent, helperSummary, joinMeta } from "../../client/ui/features/card-view";
+import { ageLabel, compactMeta, tokenLabel, helperSummary, joinMeta } from "../../client/ui/features/card-view";
 
 describe("ageLabel", () => {
   const now = 10_000_000_000;
@@ -15,10 +15,13 @@ describe("ageLabel", () => {
   ])("%d ms ago reads %s", (ago, label) => expect(ageLabel(now - ago, now)).toBe(label));
 });
 
-describe("contextPercent", () => {
-  it("rounds to a whole percent and passes unknown through", () => {
-    expect(contextPercent(0.256)).toBe(26);
-    expect(contextPercent(undefined)).toBeNull();
+describe("tokenLabel", () => {
+  it("shortens a token count and passes unknown through", () => {
+    expect(tokenLabel(820)).toBe("820");
+    expect(tokenLabel(4200)).toBe("4.2k");
+    expect(tokenLabel(145_230)).toBe("145.2k");
+    expect(tokenLabel(1_240_000)).toBe("1.2M");
+    expect(tokenLabel(undefined)).toBeNull();
   });
 });
 

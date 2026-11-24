@@ -1,6 +1,7 @@
 import { Icon, TextInput } from "@getpaseo/plugin/client/ui";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Platform, Pressable, View, type NativeSyntheticEvent, type TextInput as NativeTextInput, type TextInputKeyPressEventData } from "react-native";
+import { useGlideSnap } from "../behaviors";
 import { usePalette, useFont, useFontScale } from "../tokens/context";
 import { icon, isDark, opacity, outerGlow, radius, size, space, tint } from "../tokens/tokens";
 
@@ -22,6 +23,8 @@ export function Composer(props: {
   const f = useFont();
   const scale = useFontScale();
   const input = useRef<NativeTextInput>(null);
+  const snap = useGlideSnap();
+  const lastHeight = useRef<string | null>(null);
   const [focused, setFocused] = useState(false);
   const [nativeHeight, setNativeHeight] = useState<number>(size.input);
   const accent = props.color ?? p.accent;
@@ -35,7 +38,11 @@ export function Composer(props: {
     if (!el?.style) return;
     el.style.height = "0px";
     const full = el.scrollHeight + (el.offsetHeight - el.clientHeight);
-    el.style.height = `${Math.min(max, Math.max(size.input, full))}px`;
+    const next = `${Math.min(max, Math.max(size.input, full))}px`;
+    // The card grows with the box: the cards around it snap rather than glide.
+    if (lastHeight.current !== null && lastHeight.current !== next) snap();
+    lastHeight.current = next;
+    el.style.height = next;
     el.style.overflowY = full > max ? "auto" : "hidden";
   }, [props.value, max]);
 
@@ -62,6 +69,7 @@ export function Composer(props: {
         onBlur={() => setFocused(false)}
         editable={!props.disabled}
         onContentSizeChange={(e) => {
+          if (Platform.OS !== "web") snap();
           if (Platform.OS !== "web") setNativeHeight(Math.min(max, Math.max(size.input, e.nativeEvent.contentSize.height + size.inputPad * 2 + 2 * size.hairline)));
         }}
         placeholder={props.placeholder ?? "Message"}

@@ -1,8 +1,16 @@
-import { Children, isValidElement, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Children, createContext, isValidElement, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, View, type LayoutChangeEvent } from "react-native";
 import { motion } from "../tokens/tokens";
 import { glideOffset, layoutPositions, shouldEnter } from "./glide-math";
 import { useReducedMotion } from "./useReducedMotion";
+
+const SnapCtx = createContext<() => void>(() => {});
+
+/**
+ * Call it just before something inside a Glide grows or shrinks on its own (a message box gaining
+ * a line): the cards that shift in response snap to their places instead of sliding.
+ */
+export const useGlideSnap = () => useContext(SnapCtx);
 
 type Motion = { slide: Animated.Value; fade: Animated.Value; shown: number; joined: boolean };
 
@@ -18,6 +26,8 @@ export function Glide({ children, gap = 0 }: { children: ReactNode; gap?: number
   const loaded = useRef(false);
   const motions = useRef(new Map<string, Motion>());
   const lastTops = useRef(new Map<string, number>());
+  const snapUntil = useRef(0);
+  const snap = useRef(() => { snapUntil.current = Date.now() + motion.settle; }).current;
 
   const kids = Children.toArray(children).filter(isValidElement);
   const keys = kids.map((k) => String(k.key));
@@ -40,7 +50,7 @@ export function Glide({ children, gap = 0 }: { children: ReactNode; gap?: number
       const m = motions.current.get(key);
       const top = tops[i];
       if (!m || top === undefined) return;
-      const from = glideOffset(lastTops.current.get(key), top, !reduced, m.shown);
+      const from = glideOffset(lastTops.current.get(key), top, !reduced && Date.now() >= snapUntil.current, m.shown);
       lastTops.current.set(key, top);
       if (from !== null) {
         m.slide.setValue(from);
@@ -69,6 +79,7 @@ export function Glide({ children, gap = 0 }: { children: ReactNode; gap?: number
   };
 
   return (
+    <SnapCtx.Provider value={snap}>
     <View style={{ gap }}>
       {items.map(({ key, node, motion: m }) => {
         // A joiner stays out of the flow until measured, so the cards below hold their places
@@ -88,5 +99,6 @@ export function Glide({ children, gap = 0 }: { children: ReactNode; gap?: number
         );
       })}
     </View>
+    </SnapCtx.Provider>
   );
 }

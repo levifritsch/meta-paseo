@@ -21,7 +21,7 @@ function Actions({ actions, onAction }: { actions: Action[]; onAction: (id: stri
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.md }}>
       {actions.map((a) => (
-        <Btn key={a.id} label={a.label} onPress={() => onAction(a.id)} variant={a.variant === "danger" ? "danger" : a.variant === "secondary" ? "ghost" : "solid"} />
+        <Btn key={a.id} label={a.label} onPress={() => onAction(a.id)} variant={a.variant === "danger" ? "danger" : a.variant === "secondary" ? "plain" : "solid"} />
       ))}
     </View>
   );

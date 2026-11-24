@@ -1,13 +1,14 @@
 // One board column: a header over a scrolling stack of cards, or a folded strip of dots.
 // No outline or background: the cards carry the color. Cards scroll under a fade from the page.
 import { Icon, ScrollView } from "@getpaseo/plugin/client/ui";
-import { Pressable, Text, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Pressable, ScrollView as NativeScrollView, Text, View } from "react-native";
 import type { Card as CardModel, CardState, LayoutColumn } from "../../../shared/core";
 import type { CardExtras } from "../../data/card-map";
-import { Badge, IconButton, useHover } from "../atoms";
+import { Badge, Dot, IconButton, useHover } from "../atoms";
 import { Fade, FocusScope, Glide } from "../behaviors";
 import { FontScaleProvider, useFont, usePalette } from "../tokens/context";
-import { font, icon, radius, size, space, stateColor, tint } from "../tokens/tokens";
+import { STATE_SHAPE, font, icon, motion, radius, size, space, stateColor, tint } from "../tokens/tokens";
 import { Card } from "./Card";
 import { columnCounts } from "./column-view";
 
@@ -60,7 +61,7 @@ function FoldedColumn(props: { column: LayoutColumn; height: number; states: Rea
         <View style={{ marginTop: space.pad, alignItems: "center" }}>
           {dots.map((id) => (
             <View key={id} style={{ height: size.stripDotRow, justifyContent: "center" }}>
-              <View style={{ width: size.dot, height: size.dot, borderRadius: size.dot / 2, backgroundColor: stateColor(p, props.states[id] ?? "done") }} />
+              <Dot color={stateColor(p, props.states[id] ?? "done")} shape={STATE_SHAPE[props.states[id] ?? "done"]} />
             </View>
           ))}
           {extra > 0 ? <Text style={{ color: p.muted, fontSize: font.xxs, height: size.stripMore }}>+{extra}</Text> : null}
@@ -87,6 +88,25 @@ export function Column(props: ColumnProps) {
   const p = usePalette();
   const f = useFont();
   const { column } = props;
+  // A card you open lands at the bottom of its section's expanded stack (S5): scroll to it once
+  // the cards around it have glided into place, since a card mid-slide measures off its spot.
+  const scroller = useRef<NativeScrollView | null>(null);
+  const content = useRef<View | null>(null);
+  const cardViews = useRef(new Map<string, View>());
+  const reveal = useRef<string | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  useEffect(() => {
+    const id = reveal.current;
+    if (!id || !column.sections.some((s) => s.cards.some((c) => c.id === id && c.expanded))) return;
+    reveal.current = null;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const view = cardViews.current.get(id);
+      if (!view || !content.current) return;
+      view.measureLayout(content.current, (_x, y) => scroller.current?.scrollTo({ y: Math.max(0, y + space.mid - size.columnFade), animated: true }), () => {});
+    }, motion.base + motion.settle);
+  }, [column]);
   if (column.folded) return <FoldedColumn column={column} height={props.height} states={props.states} onPress={props.onToggleFold} />;
 
   const sections = column.sections.filter((s) => s.cards.length > 0);
@@ -107,7 +127,8 @@ export function Column(props: ColumnProps) {
         </View>
       </FontScaleProvider>
       <View style={{ flex: 1, minHeight: 0 }}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: space.mid, paddingBottom: space.xl, paddingHorizontal: size.gutter, gap: space.lg }}>
+        <ScrollView ref={scroller} style={{ flex: 1 }} contentContainerStyle={{ paddingTop: space.mid, paddingBottom: space.xl, paddingHorizontal: size.gutter }}>
+          <View ref={content} collapsable={false} style={{ gap: space.lg }}>
           {column.count === 0 ? <Text style={{ color: p.muted, fontSize: f.sm, paddingHorizontal: space.pad, paddingTop: space.mid }}>No sessions here.</Text> : null}
           {sections.map((s) => (
             <View key={s.id || "all"} style={{ gap: space.lg }}>
@@ -119,7 +140,7 @@ export function Column(props: ColumnProps) {
                   const card = props.cards.get(id);
                   if (!card) return null;
                   return (
-                    <FocusScope key={id} onChange={(inside) => props.onFocusChange(id, inside)}>
+                    <FocusScope key={id} viewRef={(v) => (v ? cardViews.current.set(id, v) : cardViews.current.delete(id))} onChange={(inside) => props.onFocusChange(id, inside)}>
                       <Card
                         card={card}
                         extras={props.extras[id]}
@@ -127,8 +148,13 @@ export function Column(props: ColumnProps) {
                         now={props.now}
                         expanded={expanded}
                         colorId={props.colors[id]}
-                        onToggleExpanded={() => props.onToggleExpanded(card, expanded)}
+                        onToggleExpanded={() => {
+                          reveal.current = expanded ? null : id;
+                          props.onToggleExpanded(card, expanded);
+                        }}
                         onChangeColor={(colorId) => props.onChangeColor(id, colorId)}
+                        // Sending releases the card's focus pin so it can move (F2).
+                        onSent={() => props.onFocusChange(id, false)}
                         onOpenChat={props.onOpenChat && (() => props.onOpenChat?.(id))}
                       />
                     </FocusScope>
@@ -137,6 +163,7 @@ export function Column(props: ColumnProps) {
               </Glide>
             </View>
           ))}
+          </View>
         </ScrollView>
         <Fade color={p.bg} edge="top" height={size.columnFade} />
       </View>

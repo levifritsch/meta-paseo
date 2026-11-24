@@ -31,7 +31,7 @@ export function Popover(props: { at: Anchor | null; width: number; height: numbe
           borderRadius: radius.menu,
           borderWidth: size.hairline,
           borderColor: p.border,
-          backgroundColor: p.card,
+          backgroundColor: p.bg,
           ...shadow.popover,
         }}
       >

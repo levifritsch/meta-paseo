@@ -19,8 +19,9 @@ const CHAT_EMPHASIS = opacity.chat;
  * It has no frame of its own: a card gives it one. `hideChat` folds the turns away and keeps the
  * request and message box; `trailing` sits after the last turn; `footnote` floats over the bottom
  * fade; `color` is the card's, for the message box. The chat takes `chatHeight`, or the room there is.
+ * `onSent` fires once a message has gone through.
  */
-export function ChatView({ agentId, hideChat = false, chatHeight, color, trailing, footnote }: { agentId: string; hideChat?: boolean; chatHeight?: number; color?: string; trailing?: ReactNode; footnote?: ReactNode }) {
+export function ChatView({ agentId, hideChat = false, chatHeight, color, trailing, footnote, onSent }: { agentId: string; hideChat?: boolean; chatHeight?: number; color?: string; trailing?: ReactNode; footnote?: ReactNode; onSent?: () => void }) {
   const p = usePalette();
   const f = useFont();
   const chat = useAgentChat(agentId);
@@ -50,6 +51,7 @@ export function ChatView({ agentId, hideChat = false, chatHeight, color, trailin
       () => {
         setDraft("");
         scroll.follow();
+        onSent?.();
       },
       (e: unknown) => setSendError(e instanceof Error ? e.message : String(e)),
     );
@@ -57,9 +59,10 @@ export function ChatView({ agentId, hideChat = false, chatHeight, color, trailin
 
   const request = chat.requests[0];
   const running = chat.status === "running";
+  // Thinking is hidden: it is long, and the tool calls and reply say what happened.
   // Each group is a direct child of the scroll content, so a reply's layout `y` is its place in it.
   const turnRows = (turns: Turn[]) =>
-    groupBlocks(turns.flatMap((t) => t.blocks)).map((g) => {
+    groupBlocks(turns.flatMap((t) => t.blocks).filter((b) => b.kind !== "reasoning")).map((g) => {
       const first = g.blocks[0]!;
       const isLatest = g.kind === "reply" && first.id === reply?.id;
       return (
@@ -80,7 +83,7 @@ export function ChatView({ agentId, hideChat = false, chatHeight, color, trailin
     <View style={{ flex: hideChat || chatHeight ? undefined : 1 }}>
       {!hideChat && (
         <View style={{ flex: chatHeight ? undefined : 1, height: chatHeight, backgroundColor: chatBackground(p) }}>
-          <ScrollView {...scroll.scrollProps} contentContainerStyle={{ paddingHorizontal: size.gutter, paddingVertical: size.fade - space.run, gap: space.xl, opacity: CHAT_EMPHASIS }}>
+          <ScrollView {...scroll.scrollProps} contentContainerStyle={{ paddingHorizontal: size.gutter, paddingTop: size.fade - space.run, paddingBottom: size.chatEnd, gap: space.xl, opacity: CHAT_EMPHASIS }}>
             {chat.hasOlder && (
               <Btn small label={loadingOlder ? "Loading…" : "Show earlier"} variant="ghost" disabled={loadingOlder} onPress={showEarlier} style={{ alignSelf: "center" }} />
             )}
@@ -99,7 +102,7 @@ export function ChatView({ agentId, hideChat = false, chatHeight, color, trailin
           <Fade color={p.card} edge="top" height={size.fade} />
           <Fade color={p.card} edge="bottom" height={size.fade} />
           {footnote ? (
-            <View pointerEvents="none" style={{ position: "absolute", left: space.xl, right: size.footnoteRight, bottom: space.run, flexDirection: "row", alignItems: "center" }}>
+            <View pointerEvents="none" style={{ position: "absolute", left: space.xl, right: space.xl, bottom: space.run, flexDirection: "row", alignItems: "center" }}>
               {footnote}
             </View>
           ) : null}

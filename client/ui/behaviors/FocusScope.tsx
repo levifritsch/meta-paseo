@@ -7,11 +7,14 @@ import { createFocusTracker } from "./focus-scope";
  * from any input in the subtree, and `tabIndex: -1` makes a click on the padding land on the
  * container, so focus stays inside. The input-reporting fallback for native is untried.
  */
-export function FocusScope({ onChange, children }: { onChange: (inside: boolean) => void; children: ReactNode }) {
+export function FocusScope({ onChange, viewRef, children }: { onChange: (inside: boolean) => void; viewRef?: (view: View | null) => void; children: ReactNode }) {
   const latest = useRef(onChange);
   latest.current = onChange;
   const tracker = useMemo(() => createFocusTracker((inside) => latest.current(inside)), []);
   // `onFocus` and `onBlur` are not in React Native's View props; react-native-web forwards them.
   const bubble = { onFocus: () => tracker.enter("scope"), onBlur: () => tracker.leave("scope"), tabIndex: -1, style: { outlineStyle: "none" } } as object;
-  return <View {...bubble}>{children}</View>;
+  return (
+    <View ref={viewRef} collapsable={false} {...bubble}>{children}
+    </View>
+  );
 }

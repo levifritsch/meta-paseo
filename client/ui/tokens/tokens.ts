@@ -19,7 +19,13 @@ export type Palette = {
   info: string;
 };
 
-/** Paseo's theme colors, plus violet and blue, which the theme has no tokens for. */
+const sessionHex = (id: string) => SESSION_COLORS.find((c) => c.id === id)!.hex;
+
+/**
+ * Paseo's theme colors, and the session colors for states: question amber, permission purple,
+ * running blue, done green, failed red. The theme's warning and danger colors did not read as
+ * yellow and red here, and one set of colors keeps states and sessions alike.
+ */
 export function palette(theme: PluginTheme): Palette {
   const c = theme.colors;
   return {
@@ -31,12 +37,12 @@ export function palette(theme: PluginTheme): Palette {
     muted: c.foregroundMuted,
     accent: c.accent,
     onAccent: c.accentForeground,
-    done: c.statusSuccess,
-    question: c.statusWarning,
-    error: c.statusDanger,
-    permission: "#8b5cf6",
-    running: "#3b82f6",
-    info: "#3b82f6",
+    done: sessionHex("green"),
+    question: sessionHex("amber"),
+    error: sessionHex("red"),
+    permission: sessionHex("purple"),
+    running: sessionHex("blue"),
+    info: sessionHex("blue"),
   };
 }
 
@@ -54,6 +60,10 @@ export function stateColor(p: Palette, state: CardState): string {
       return p.running;
   }
 }
+
+/** The shape of a state's dot: a symbol per state, so state reads without color. */
+export type DotShape = "circle" | "square" | "triangle" | "cross" | "spinner";
+export const STATE_SHAPE: Record<CardState, DotShape> = { needs: "square", permission: "triangle", running: "spinner", done: "circle", failed: "cross" };
 
 /** Badge tones, loudest first: danger for failure, warning for permission, info for question. */
 export type Tone = "danger" | "warning" | "info" | "neutral";
@@ -76,7 +86,7 @@ export const icon = { xs: 12, sm: 13, md: 14, lg: 15, xl: 16 } as const;
 /** Opacities: a pressed control, a disabled one, a faint one, dimmed tool calls and chat. */
 export const opacity = { pressed: 0.75, disabled: 0.45, faint: 0.5, tool: 0.5, chat: 0.8 } as const;
 /** Widths as a share of the parent. */
-export const share = { meta: "45%", prompt: "88%" } as const;
+export const share = { prompt: "88%" } as const;
 /** Line height as a multiple of the font size. */
 export const leading = { title: 1.3, body: 1.4 } as const;
 /** Shadows under floating things (`elevation` is Android's). */
@@ -102,6 +112,8 @@ export const size = {
   /** The value between a stepper's buttons. */
   stepperValue: 46,
   spinnerRing: 1.5,
+  /** A stepper's round - and + buttons. */
+  stepButton: 20,
   badge: 18,
   control: 28,
   iconButtonW: 26,
@@ -113,6 +125,8 @@ export const size = {
   optionsWidth: 270,
   /** The chat's visible height inside a full card. */
   chat: 375,
+  /** Room under the chat's last line, so the end of the chat is plain to see. */
+  chatEnd: 36,
   /** The chat's top and bottom fades. */
   fade: 36,
   /** The message box: its minimum height, which is also the send button's diameter. */
@@ -138,9 +152,8 @@ export const size = {
   stripLabelHeight: 26,
   /** A column's fade under its header. */
   columnFade: 20,
-  /** The color picker's heading row, and the right edge of the footnote over a chat (clear of the send button). */
+  /** The color picker's heading row. */
   pickerLabel: 22,
-  footnoteRight: 130,
   popoverPad: 4,
   /** A card menu rule: its line plus the space above and below. */
   menuRule: 9,
@@ -211,9 +224,25 @@ export function fadeBands(color: string, steps: number): string[] | null {
   return Array.from({ length: steps }, (_, i) => tint(color, 0.92 * (1 - i / steps)));
 }
 
-/** Text that sits over the chat reads through a strong halo in the card color. Web stacks layers of rising blur, since one shadow is too thin. */
-export function halo(card: string): { textShadow?: string; textShadowColor?: string; textShadowRadius?: number; textShadowOffset?: { width: number; height: number } } {
+/** Text that sits over the chat reads through a strong halo in the card color. Web stacks layers of rising blur, since one shadow is too thin; native takes the single shadow. */
+export function halo(card: string, web: boolean): { textShadow?: string; textShadowColor?: string; textShadowRadius?: number; textShadowOffset?: { width: number; height: number } } {
   const solid = tint(card, 1);
-  const layers = [2, 4, 7, 11, 16].map((r) => `0 0 ${r}px ${solid}`).join(", ");
-  return { textShadow: layers, textShadowColor: solid, textShadowRadius: 8, textShadowOffset: { width: 0, height: 0 } };
+  // On web, RN-web folds the textShadow* props into one `textShadow`, so give it one or the other.
+  if (web) return { textShadow: [2, 4, 7, 11, 16].map((r) => `0 0 ${r}px ${solid}`).join(", ") };
+  return { textShadowColor: solid, textShadowRadius: 8, textShadowOffset: { width: 0, height: 0 } };
+}
+
+/** The attribute `TokensProvider` puts on the plugin's tree (as `dataSet.metaPaseo`), so the scrollbar style below reaches nothing outside it. */
+const SCOPE_ATTR = "data-meta-paseo";
+/** Web only: a thin, faint scrollbar line in place of the default bar. Chromium takes the pseudo-elements; Firefox the standard properties. */
+export function scrollbarCss(p: Palette): string {
+  const thumb = tint(p.muted, 0.35);
+  const s = `[${SCOPE_ATTR}]`;
+  return [
+    `${s} *::-webkit-scrollbar { width: 5px; height: 5px; background: transparent; }`,
+    `${s} *::-webkit-scrollbar-track, ${s} *::-webkit-scrollbar-corner { background: transparent; }`,
+    `${s} *::-webkit-scrollbar-thumb { background: ${thumb}; border-radius: 3px; }`,
+    `${s} *::-webkit-scrollbar-thumb:hover { background: ${tint(p.muted, 0.6)}; }`,
+    `@supports not selector(::-webkit-scrollbar) { ${s} * { scrollbar-width: thin; scrollbar-color: ${thumb} transparent; } }`,
+  ].join("\n");
 }

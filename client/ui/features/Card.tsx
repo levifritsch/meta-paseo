@@ -9,8 +9,8 @@ import type { CardExtras } from "../../data/card-map";
 import { Dot, IconButton } from "../atoms";
 import { ColorPicker, ErrorBox, MenuButton, usePopover, type Anchor, type MenuRow } from "../molecules";
 import { useFont, usePalette } from "../tokens/context";
-import { SESSION_COLORS, innerGlow, leading, radius, share, size, space, stateColor, tint } from "../tokens/tokens";
-import { ageLabel, compactMeta, contextPercent, joinMeta } from "./card-view";
+import { SESSION_COLORS, STATE_SHAPE, innerGlow, leading, radius, size, space, stateColor, tint } from "../tokens/tokens";
+import { ageLabel, compactMeta, joinMeta, tokenLabel } from "./card-view";
 import { ChatToggle, MetaTags, TitleLink } from "./card-parts";
 import { ChatView } from "./ChatView";
 
@@ -31,6 +31,8 @@ export type CardProps = {
   colorId?: string;
   onToggleExpanded: () => void;
   onChangeColor: (colorId: string) => void;
+  /** A message to this session went through. */
+  onSent?: () => void;
   /** Absent on a host with no navigation: the open-chat actions hide. */
   onOpenChat?: () => void;
 };
@@ -48,7 +50,7 @@ export function Card(props: CardProps) {
   const running = card.state === "running";
   const failed = card.state === "failed";
   const ago = ageLabel(card.waitingSince ?? card.lastActivity, props.now);
-  const tags = { model: card.model, contextPercent: contextPercent(extras?.contextUse), subAgents: extras?.subAgents ?? 0, backgroundTasks: extras?.backgroundTasks ?? 0 };
+  const tags = { model: card.model, contextTokens: tokenLabel(extras?.contextTokens), subAgents: extras?.subAgents ?? 0, backgroundTasks: extras?.backgroundTasks ?? 0 };
 
   // A new wait folds the chat behind its request; answering unfolds it again.
   const [chatOpen, setChatOpen] = useState(!waiting);
@@ -70,7 +72,7 @@ export function Card(props: CardProps) {
   ];
   const menu = <MenuButton label="Session menu" groups={rows} />;
   const picker = <ColorPicker at={colorPop.at} current={props.colorId} onPick={props.onChangeColor} onClose={colorPop.close} />;
-  const status = <Dot color={dot} ring={running} alert={failed} />;
+  const status = <Dot color={dot} shape={STATE_SHAPE[card.state]} />;
 
   if (!props.expanded) {
     return (
@@ -101,7 +103,7 @@ export function Card(props: CardProps) {
               {joinMeta(props.workspaceName, compactMeta(card.state, ago))}
             </Text>
             <View style={{ flex: 1 }} />
-            <View style={{ maxWidth: share.meta, flexShrink: 0 }}>
+            <View style={{ flexShrink: 1, minWidth: 0 }}>
               <MetaTags {...tags} />
             </View>
           </View>
@@ -145,6 +147,7 @@ export function Card(props: CardProps) {
         agentId={card.id}
         hideChat={!chatOpen}
         chatHeight={size.chat}
+        onSent={props.onSent}
         color={props.colorId ? outline : undefined}
         trailing={failed && extras?.error ? <ErrorBox text={extras.error} /> : null}
         footnote={waiting ? null : <MetaTags {...tags} over />}

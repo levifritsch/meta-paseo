@@ -16,7 +16,7 @@ Vocabulary: **state** is `needs` (question), `permission`, `running`, `done`, `f
 - **S2.** A card waiting on a permission is always expanded, with no collapse control. When answered, it returns to the size it had before.
 - **S3.** An expanded card stays expanded when it moves from `running` to `permission`.
 - **S4.** Within a column, and within each group of a workspace column, expanded cards precede compact ones.
-- **S5.** A card you expand goes to the bottom of the expanded stack in its group. The column scrolls to it.
+- **S5.** A card you expand goes to the bottom of the expanded stack in its group, and the column scrolls to it. A card you collapse goes to the top of the compact stack.
 - **S6.** A card that moves into a column joins below the expanded cards already there.
 
 ## Collapse memory
@@ -31,6 +31,7 @@ Vocabulary: **state** is `needs` (question), `permission`, `running`, `done`, `f
 - **F1.** A card with focus inside it keeps its column and place when its state changes. Its dot and outline update at once.
 - **F2.** It moves when focus leaves or when you send to it.
 - **F3.** A pinned card that starts waiting on a permission still expands (S2 beats F1 for size). Found by the property test.
+- **F4.** Pinning holds a card's size only against automatic change. A hand collapse or expand applies at once, even though clicking the toggle puts focus in the card. Found live in Paseo: the toggle did nothing until you clicked elsewhere.
 
 ## Columns
 

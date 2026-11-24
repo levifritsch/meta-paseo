@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CARD_STATES } from "../../shared/core";
 import { canStep, stepValue } from "../../client/ui/atoms/stepper-math";
 import { VIEW_LIMITS } from "../../shared/core";
-import { SESSION_COLORS, font, fadeBands, isDark, mix, palette, scaledFont, stateColor, tint } from "../../client/ui/tokens";
+import { SESSION_COLORS, font, fadeBands, isDark, mix, palette, scaledFont, scrollbarCss, stateColor, tint } from "../../client/ui/tokens/tokens";
 
 const theme = {
   colors: {
@@ -73,5 +73,14 @@ describe("color helpers", () => {
     expect(bands).toHaveLength(4);
     expect(bands[0]).toBe("rgba(0, 0, 0, 0.92)");
     expect(fadeBands("red", 4)).toBeNull();
+  });
+});
+
+describe("scrollbar", () => {
+  it("styles a thin faint thumb, scoped to the plugin's tree", () => {
+    const css = scrollbarCss(palette(theme));
+    expect(css).toContain("[data-meta-paseo] *::-webkit-scrollbar-thumb");
+    expect(css).toContain("width: 5px");
+    expect(css.split("\n").every((l) => l.includes("[data-meta-paseo]"))).toBe(true);
   });
 });

@@ -30,6 +30,12 @@ function isCollapsed(card: Card, snap: Snapshot): boolean {
   return !SETTLES.has(card.state) || card.lastActivity <= c.activity;
 }
 
+/** The size the user chose by hand, if any. */
+function handSize(card: Card, snap: Snapshot): boolean | undefined {
+  if (isCollapsed(card, snap)) return false;
+  return snap.expanded.has(card.id) ? true : undefined;
+}
+
 function isExpanded(card: Card, snap: Snapshot): boolean {
   if (card.state === "permission") return true; // invariant 2
   if (isCollapsed(card, snap)) return false;
@@ -78,20 +84,23 @@ function indexPrev(prev: Layout | null): Map<string, Prev> {
 }
 
 /**
- * Order one section. Cards that kept their column, section and size keep their
- * relative order. Joiners and cards that changed size go to the end of their
- * size block (sorted). Expanded cards come before compact ones.
+ * Order one section. Cards that kept their column, section and size keep their relative order.
+ * A card that came into the expanded stack (joined, or opened) goes to its end, sorted. A card
+ * that came into the compact stack by collapsing goes to its top, ahead of the rest; a joiner
+ * goes to the end. Expanded cards come before compact ones.
  */
 function orderSection(items: Placed[], colId: string, prevPos: Map<string, Prev>, cmp: ReturnType<typeof comparator>) {
-  const settledPrev = (p: Placed) => {
+  const prevHere = (p: Placed) => {
     const at = prevPos.get(p.card.id);
-    return at && at.columnId === colId && at.sectionId === p.sectionId && at.expanded === p.expanded ? at : undefined;
+    return at && at.columnId === colId && at.sectionId === p.sectionId ? at : undefined;
   };
   const block = (expanded: boolean): PlacedCard[] => {
     const inBlock = items.filter((p) => p.expanded === expanded);
-    const settled = inBlock.filter((p) => settledPrev(p)).sort((a, b) => settledPrev(a)!.index - settledPrev(b)!.index);
-    const rest = inBlock.filter((p) => !settledPrev(p)).sort((a, b) => cmp(a.card, b.card));
-    return [...settled, ...rest].map((p) => ({ id: p.card.id, expanded }));
+    const resized = inBlock.filter((p) => prevHere(p) && prevHere(p)!.expanded !== expanded).sort((a, b) => cmp(a.card, b.card));
+    const settled = inBlock.filter((p) => prevHere(p)?.expanded === expanded).sort((a, b) => prevHere(a)!.index - prevHere(b)!.index);
+    const joined = inBlock.filter((p) => !prevHere(p)).sort((a, b) => cmp(a.card, b.card));
+    const ordered = expanded ? [...settled, ...[...resized, ...joined].sort((a, b) => cmp(a.card, b.card))] : [...resized, ...settled, ...joined];
+    return ordered.map((p) => ({ id: p.card.id, expanded }));
   };
   return [...block(true), ...block(false)];
 }
@@ -111,9 +120,11 @@ export function board(def: BoardDef, prev: Layout | null, snap: Snapshot): Board
     const at = snap.focus === card.id ? prevPos.get(card.id) : undefined;
     const pinCol = at && colById.get(at.columnId);
     if (at && pinCol && sectionIds(pinCol).includes(at.sectionId)) {
-      // Focus pins column, section, place and size until focus leaves (invariant 3).
-      // A permission request still forces the card open (invariant 2).
-      byColumn.set(pinCol.id, [...(byColumn.get(pinCol.id) ?? []), { card, sectionId: at.sectionId, expanded: at.expanded || card.state === "permission" }]);
+      // Focus pins column, section, place and size until focus leaves (invariant 3). Size is
+      // pinned only against automatic change: a hand toggle always wins, since clicking the
+      // toggle is what puts focus in the card. A permission request still forces it open (invariant 2).
+      const byHand = card.state === "permission" ? undefined : handSize(card, snap);
+      byColumn.set(pinCol.id, [...(byColumn.get(pinCol.id) ?? []), { card, sectionId: at.sectionId, expanded: byHand ?? (at.expanded || card.state === "permission") }]);
       continue;
     }
     const col = columns.find((c) => matches(c.match, card, snap.now));

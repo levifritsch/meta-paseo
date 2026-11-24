@@ -52,9 +52,9 @@ Each stage ends with tests where the logic is pure, and a manual check in Paseo 
 - Limits: the host caps a page at 200, so the first load follows `nextCursor` through every page. A snapshot after a reconnect carries only the first page; with over 200 sessions it would drop the rest until reload. Not yet handled: a session that finished with a question open (see open question 6).
 
 **4b.3 Card.** One `Card` with slots and variants, not separate components.
-- Compact: dot, title link, workspace (status view), time, model, context use.
+- Compact: state symbol, title link, workspace (status view), time, model name, context use.
 - Full: header, project line, the chat from step 4, request panel, message box. While a question or permission waits, the chat folds behind a Show chat link.
-- Failed: the same card with an alert dot and the error at the end.
+- Failed: the same card with a cross symbol and the error at the end.
 - Outline in the session color. Menu: open chat, change color, expand or collapse, copy ID, archive. Sub-agent and background-task counts.
 - A running compact card shows what it is doing, live. Decide the cost first: one small timeline subscription per running card. Fall back to the state label if it is too heavy.
 - Status: built, not yet checked in Paseo. `features/Card.tsx` is one component: `expanded` (the engine's call, passed in) picks compact or full, and `failed` adds the error strip. Outline in the session color; menu (`molecules/Menu.tsx`): open chat (hidden when the host gives no `navigation`), change color (swatches), expand or collapse, copy ID, archive. `ChatView` takes `hideChat`: while a question or permission waits, the card shows the request and message box with a Show chat link. `card-map` extras gained `contextUse` and `error` (`lastUsage`, `lastError`); `card-view.ts` holds the age, context and helper-count text (tested); the store gained `setColor`. The data check screen lists every card, with a hand expand toggle until 4b.4 supplies it.
@@ -129,3 +129,18 @@ Still unaudited for literals: the dev screens under `client/ui/gallery/` (they s
 4. Does the engine's collapse key, the card state, need the coarser needs, permission, running groups from `board-definition.md`? We chose card state in step 1.
 5. Is the live activity line on compact cards worth its cost in 4b, or does it wait?
 6. How does a session that finished with a question open show in the snapshot? It has no pending request, so the mapper calls it `done`. Check against a real session, and decide whether it needs the timeline.
+
+## UI tweaks (2026-11-24)
+
+- State symbols: `STATE_SHAPE` in tokens maps each state to a `Dot` shape: question square, permission triangle, running spinner, done circle, failed X. All corners are rounded. The triangle is an inline SVG with the color baked in. 
+- Model name: the card shows the raw model id. Paseo gives a card only `agent.model`, and the plugin client has no catalog of model names (`ProviderModel` is server-side, for provider authors). A parsed name was tried and dropped.
+- Model and context tags are spaced by the row's `gap`, not margins: the halo's padding and negative margin used to cancel a margin. The halo is one mechanism per platform (web `textShadow` layers, native `textShadow*`), since RN-web folds the native props into one `textShadow`.
+- The chat keeps `size.chatEnd` (36) below its last line, so the bottom is plain to see. Thinking blocks are hidden in `ChatView`.
+- Atoms: the toggle button (`Switch`) and `Segmented` share one frame and option style, and a selected option takes the theme accent. `Stepper` is one hairline frame with round, plain - and + buttons set in from it. Secondary actions (cancel, deny) use `plain`, an outline; `danger` is red text in a red outline. The gallery shows every atom, state and variant.
+- Ordering and scroll: S5 is a card you expand goes to the bottom of the expanded stack, a card you collapse to the top of the compact stack. The column scrolls to the opened card itself, after the cards have glided into place.
+- A message box that gains a line makes the cards around it snap instead of glide (`useGlideSnap`, a short window in `Glide`).
+- State colors come from `SESSION_COLORS`: question amber, permission purple, running blue, done green, failed red.
+- Toggle and segmented text keeps one weight and cannot be selected. Dropdowns (`Popover`) use the page background, `palette.bg`, for contrast against cards.
+- The scrollbar is a thin faint line, web only, scoped to the plugin's tree (`scrollbarCss`).
+- The context readout shows tokens in use (`contextTokens`, `tokenLabel`: "145.2k tokens"), not a percent.
+- Checked in Paseo: the triangle, the spinner, the scroll to an opened card (a little jittery).

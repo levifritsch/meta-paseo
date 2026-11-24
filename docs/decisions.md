@@ -19,3 +19,6 @@ Append only. One entry per decision.
 - **2026-11-23: Device-scope settings are client-only.** The host refuses a server registration of one ("Device settings belong to the client"). The server registers `sessions` (host scope) only, and the `board` record is read and written through the client's `useSettings`.
 - **2026-11-23: Both settings records use a loose host schema.** Real validation, migration and the keep-the-original fallback live in `shared/core` (invariant 8). A strict host schema would reject a newer record outright and hide it from us.
 - **2026-11-23: `view` (column width, font scale) lives in the board definition record**, per client. Out-of-range values reset to the default without rejecting the definition.
+- **2026-11-24: A collapsed card goes to the top of the compact stack; an opened card still goes to the bottom of the expanded stack** (S5). Tried the top for opened cards too and reverted it: cards jumped on automatic state changes.
+- **2026-11-24: A card shows the raw model id.** Paseo exposes no model-name catalog to the plugin client, and a name parsed from the id was fragile.
+- **2026-11-24: State is shown by symbol as well as color.** State colors are the session colors (question amber, failed red). Chosen so state reads without color and matches the palette.

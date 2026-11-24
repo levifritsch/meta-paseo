@@ -15,19 +15,16 @@ export type CardExtras = {
   subAgents: number;
   backgroundTasks: number;
   createdAt: number;
-  /** Share of the context window in use, 0 to 1. Absent when the provider reports no window. */
-  contextUse?: number;
+  /** Tokens in use in the context window. Absent when the provider reports none. */
+  contextTokens?: number;
   /** The session's last error text, when it has one. */
   error?: string;
 };
 
-/** Used tokens over the window, clamped to 0..1. Absent unless both numbers are real and the window is positive. */
-export function contextUse(agent: PaseoAgent): number | undefined {
-  const u = (agent as { lastUsage?: { contextWindowUsedTokens?: number; contextWindowMaxTokens?: number } }).lastUsage;
-  const used = u?.contextWindowUsedTokens;
-  const max = u?.contextWindowMaxTokens;
-  if (typeof used !== "number" || typeof max !== "number" || !Number.isFinite(used) || !Number.isFinite(max) || max <= 0) return undefined;
-  return Math.min(1, Math.max(0, used / max));
+/** Tokens in use in the context window. Absent unless the provider reports a real, non-negative number. */
+export function contextTokens(agent: PaseoAgent): number | undefined {
+  const used = (agent as { lastUsage?: { contextWindowUsedTokens?: number } }).lastUsage?.contextWindowUsedTokens;
+  return typeof used === "number" && Number.isFinite(used) && used >= 0 ? used : undefined;
 }
 
 export type MappedBoard = {
@@ -108,7 +105,7 @@ export function mapBoard(agents: readonly PaseoAgent[], workspaces: readonly Pas
       hasSubAgents: subAgents + backgroundTasks > 0,
     });
     const error = (a as { lastError?: string | null }).lastError?.trim();
-    extras[a.id] = { subAgents, backgroundTasks, createdAt: time(a.createdAt) ?? lastActivity, contextUse: contextUse(a), error: error || undefined };
+    extras[a.id] = { subAgents, backgroundTasks, createdAt: time(a.createdAt) ?? lastActivity, contextTokens: contextTokens(a), error: error || undefined };
   }
   return { cards, extras, hidden };
 }

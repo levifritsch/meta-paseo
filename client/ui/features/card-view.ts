@@ -11,9 +11,13 @@ export function ageLabel(then: number, now: number): string {
   return `${Math.floor(h / 24)}d`;
 }
 
-/** Context use as a whole percent, or null when unknown. */
-export const contextPercent = (use: number | undefined): number | null => (use === undefined ? null : Math.round(use * 100));
-
+/** Tokens as "820" or "145.2k" or "1.2M". Null when unknown. */
+export function tokenLabel(tokens: number | undefined): string | null {
+  if (tokens === undefined) return null;
+  if (tokens < 1000) return `${Math.round(tokens)}`;
+  if (tokens < 999_950) return `${(tokens / 1000).toFixed(1)}k`;
+  return `${(tokens / 1_000_000).toFixed(1)}M`;
+}
 /** "2 sub-agents · 1 background task", or null when there are none. */
 export function helperSummary(subAgents: number, backgroundTasks: number): string | null {
   const parts: string[] = [];
